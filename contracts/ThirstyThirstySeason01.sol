@@ -13,9 +13,9 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contr
 
 contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
 
-    /**
-     * @dev Cut gas cost by using counter instead of ERC721Enumerable's totalSupply.
-     */
+    using Strings for uint256;
+
+    /** @dev Cut gas cost by using counter instead of ERC721Enumerable's totalSupply. */
     using Counters for Counters.Counter;
     Counters.Counter private _nextTokenId;
 
