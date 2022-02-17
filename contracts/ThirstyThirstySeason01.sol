@@ -114,6 +114,10 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         return super.tokenURI(_tokenId);
     }
 
+    function setMerkleRoot(bytes32 _merkleRoot) public onlyOwner {
+        merkleRoot = _merkleRoot;
+    }
+
     function _beforeTokenTransfer(
         address from,
         address to,
