@@ -4,6 +4,8 @@
   },
   "devDependencies": {
     "@types/chai-as-promised": "^7.1.5",
-    "chai-as-promised": "^7.1.1"
+    "chai-as-promised": "^7.1.1",
+    "keccak256": "^1.0.6",
+    "merkletreejs": "^0.2.31"
   }
 }
