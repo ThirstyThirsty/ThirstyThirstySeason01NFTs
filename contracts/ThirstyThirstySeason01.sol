@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -15,81 +15,68 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
 
     using Strings for uint256;
 
+    string private _metadataBaseURI;
+
     /** @dev Cut gas cost by using counter instead of ERC721Enumerable's totalSupply. */
     using Counters for Counters.Counter;
     Counters.Counter private _nextTokenId;
 
-    bool public isRevealed = false;
-    bool public isPresaleActive = false;
-    bool public isPublicSaleActive = false;
-
     uint256 public maxSupply;
-    uint256 public mintPriceInWei;
+    uint256 public mintPriceInWei; // Top tier = .3ETH, Tier 2 = .08ETH, Goldlist = .05
 
-    string public defaultMetadataURI;
-
-    bytes32 public merkleRoot; // Fill variable before deployment
-    mapping(address => bool) private allowListClaimed;
+    bytes32 public merkleRoot; // Fill variable before deployment, if used.
+    mapping(address => uint8) private _mintsPerUser;
 
     constructor(
         string memory _name,
         string memory _symbol,
+        string memory _metadataURI,
         uint256 _maxSupply,
         uint256 _mintPriceInWei,
-        string memory _defaultMetadataURI
+        bytes32 _merkleRoot
     ) ERC721(_name, _symbol) {
         maxSupply = _maxSupply;
         mintPriceInWei = _mintPriceInWei;
-        defaultMetadataURI = _defaultMetadataURI;
+        merkleRoot = _merkleRoot;
+        _metadataBaseURI = _metadataURI;
 
         _nextTokenId.increment();
     }
 
-    function presaleMint(bytes32[] calldata _merkleProof) public payable {
-        require(isPresaleActive, "Presale not open yet.");
-
-        require(!allowListClaimed[msg.sender], "Address has already claimed.");
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-        require(MerkleProof.verify(_merkleProof, merkleRoot, leaf), "Address not in allow-list.");
-
+    function mint() public payable {
         uint256 mintIndex = _nextTokenId.current();
-        require((mintIndex < maxSupply) || (mintIndex == maxSupply), "Sold out.");
-        require((msg.value > mintPriceInWei) || (msg.value == mintPriceInWei), "Not enough fund.");
+        // Avoid using >= and <= for performance reason.
+        require((mintIndex < maxSupply) || (mintIndex == maxSupply), "Sold out");
+        require((msg.value > mintPriceInWei) || (msg.value == mintPriceInWei), "Not enough fund");
+        // Max mint is 6, not stored in storage variable for performance reasons
+        require((_mintsPerUser[msg.sender] < 6), "No more mint for user");
 
-        allowListClaimed[msg.sender] = true;
+        _mintsPerUser[msg.sender] += 1;
         _nextTokenId.increment();
         _safeMint(msg.sender, mintIndex);
     }
 
-    function publicMint() public payable {
-        require(!isPresaleActive, "Presale still active.");
-        require(isPublicSaleActive, "Public sale not open yet.");
-
+    function mintGold(bytes32[] calldata _merkleProof) public payable {
+        if (merkleRoot != 0) {
+            require(_mintsPerUser[msg.sender] == 0, "Address has already claimed");
+            bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+            require(MerkleProof.verify(_merkleProof, merkleRoot, leaf), "Address not in goldlist");
+        }
         uint256 mintIndex = _nextTokenId.current();
-        require((mintIndex < maxSupply) || (mintIndex == maxSupply), "Sold out.");
-        require((msg.value > mintPriceInWei) || (msg.value == mintPriceInWei), "Not enough fund.");
+        require((mintIndex < maxSupply) || (mintIndex == maxSupply), "Sold out");
+        require((msg.value > mintPriceInWei) || (msg.value == mintPriceInWei), "Not enough fund");
 
+        _mintsPerUser[msg.sender] += 1;
         _nextTokenId.increment();
         _safeMint(msg.sender, mintIndex);
     }
 
-    function activatePresale() public onlyOwner {
-        require(!isPresaleActive, "Presale already active.");
-        require(!isPublicSaleActive, "Public sale is active.");
-
-        isPresaleActive = true;
-    }
-
-    function activatePublicSale() public onlyOwner {
-        require(isPresaleActive, "Presale not activated prior.");
-        require(!isPublicSaleActive, "Public sale already active.");
-
-        isPresaleActive = false;
-        isPublicSaleActive = true;
-    }
-
-    function tokensMinted() public view returns (uint256) {
+    function nextTokenID() public view returns (uint256) {
         return _nextTokenId.current();
+    }
+
+    function numOfMints() public view returns (uint256) {
+        return _nextTokenId.current() - 1;
     }
 
     function pause() public onlyOwner {
@@ -100,22 +87,17 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         _unpause();
     }
 
-    function reveal() public onlyOwner {
-        require(!isRevealed, "Already revealed.");
-        isRevealed = true;
-    }
-
     function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
         require(_exists(_tokenId), "URI query for nonexistent token");
-        if (!isRevealed) {
-            return defaultMetadataURI;
-        }
-
         return super.tokenURI(_tokenId);
     }
 
     function setMerkleRoot(bytes32 _merkleRoot) public onlyOwner {
         merkleRoot = _merkleRoot;
+    }
+
+    function _baseURI() internal view virtual override returns (string memory) {
+        return _metadataBaseURI;
     }
 
     function _beforeTokenTransfer(
