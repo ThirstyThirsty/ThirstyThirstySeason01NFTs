@@ -15,77 +15,50 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
 
     using Strings for uint256;
 
+    string private _metadataBaseURI;
+
     /** @dev Cut gas cost by using counter instead of ERC721Enumerable's totalSupply. */
     using Counters for Counters.Counter;
     Counters.Counter private _nextTokenId;
 
-    bool public isRevealed = false;
-    bool public isPresaleActive = false;
-    bool public isPublicSaleActive = false;
-
     uint256 public maxSupply;
-    uint256 public mintPriceInWei;
+    uint256 public mintPriceInWei; // Top tier = .3ETH, Tier 2 = .08ETH, Goldlist = .05
 
-    string public defaultMetadataURI;
-
-    bytes32 public merkleRoot; // Fill variable before deployment
-    mapping(address => bool) private allowListClaimed;
+    bytes32 public merkleRoot; // Fill variable before deployment, if used.
+    mapping(address => bool) private goldListClaimed;
 
     constructor(
         string memory _name,
         string memory _symbol,
+        string memory _metadataURI,
         uint256 _maxSupply,
-        uint256 _mintPriceInWei,
-        string memory _defaultMetadataURI
+        uint256 _mintPriceInWei
     ) ERC721(_name, _symbol) {
         maxSupply = _maxSupply;
         mintPriceInWei = _mintPriceInWei;
-        defaultMetadataURI = _defaultMetadataURI;
+        _metadataBaseURI = _metadataURI;
 
         _nextTokenId.increment();
     }
 
-    function presaleMint(bytes32[] calldata _merkleProof) public payable {
-        require(isPresaleActive, "Presale not open yet.");
-
-        require(!allowListClaimed[msg.sender], "Address has already claimed.");
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-        require(MerkleProof.verify(_merkleProof, merkleRoot, leaf), "Address not in allow-list.");
-
-        uint256 mintIndex = _nextTokenId.current();
-        require((mintIndex < maxSupply) || (mintIndex == maxSupply), "Sold out.");
-        require((msg.value > mintPriceInWei) || (msg.value == mintPriceInWei), "Not enough fund.");
-
-        allowListClaimed[msg.sender] = true;
-        _nextTokenId.increment();
-        _safeMint(msg.sender, mintIndex);
-    }
-
-    function publicMint() public payable {
-        require(!isPresaleActive, "Presale still active.");
-        require(isPublicSaleActive, "Public sale not open yet.");
+    function mint(bytes32[] calldata _merkleProof) public payable {
+        // If merkle root is set, we're filtering attempts through goldlist membership.
+        if (merkleRoot != 0) {
+            require(!goldListClaimed[msg.sender], "Address has already claimed");
+            bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+            require(MerkleProof.verify(_merkleProof, merkleRoot, leaf), "Address not in goldlist");
+        }
 
         uint256 mintIndex = _nextTokenId.current();
+        // Avoid using >= and <= for performance reason.
         require((mintIndex < maxSupply) || (mintIndex == maxSupply), "Sold out.");
-        require((msg.value > mintPriceInWei) || (msg.value == mintPriceInWei), "Not enough fund.");
+        require((msg.value > mintPriceInWei) || (msg.value == mintPriceInWei), "Not enough fund");
+        if (merkleRoot != 0) {
+            goldListClaimed[msg.sender] = true;
+        }
 
         _nextTokenId.increment();
         _safeMint(msg.sender, mintIndex);
-    }
-
-    function activatePresale() public onlyOwner {
-        require(!isPresaleActive, "Presale already active.");
-        require(!isPublicSaleActive, "Public sale is active.");
-
-        isPresaleActive = true;
-    }
-
-    function activatePublicSale() public onlyOwner {
-        require(isPresaleActive, "Presale not activated prior.");
-        require(!isPublicSaleActive, "Public sale already active.");
-
-        isPresaleActive = false;
-        isPublicSaleActive = true;
     }
 
     function tokensMinted() public view returns (uint256) {
@@ -100,22 +73,17 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         _unpause();
     }
 
-    function reveal() public onlyOwner {
-        require(!isRevealed, "Already revealed.");
-        isRevealed = true;
-    }
-
     function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
         require(_exists(_tokenId), "URI query for nonexistent token");
-        if (!isRevealed) {
-            return defaultMetadataURI;
-        }
-
         return super.tokenURI(_tokenId);
     }
 
     function setMerkleRoot(bytes32 _merkleRoot) public onlyOwner {
         merkleRoot = _merkleRoot;
+    }
+
+    function _baseURI() internal view virtual override returns (string memory) {
+        return _metadataBaseURI;
     }
 
     function _beforeTokenTransfer(
