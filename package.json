@@ -1,5 +1,9 @@
 {
   "dependencies": {
     "@openzeppelin/contracts": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/chai-as-promised": "^7.1.5",
+    "chai-as-promised": "^7.1.1"
   }
 }
