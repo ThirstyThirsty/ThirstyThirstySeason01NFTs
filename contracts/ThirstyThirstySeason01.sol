@@ -25,7 +25,7 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
     uint256 public mintPriceInWei; // Top tier = .3ETH, Tier 2 = .08ETH, Goldlist = .05
 
     bytes32 public merkleRoot; // Fill variable before deployment, if used.
-    mapping(address => uint8) private _mintsPerUser;
+    mapping(address => uint8) private mintsPerUser;
 
     constructor(
         string memory _name,
@@ -45,28 +45,27 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
 
     function mint() public payable {
         uint256 mintIndex = _nextTokenId.current();
-        // Avoid using >= and <= for performance reason.
-        require((mintIndex < maxSupply) || (mintIndex == maxSupply), "Sold out");
-        require((msg.value > mintPriceInWei) || (msg.value == mintPriceInWei), "Not enough fund");
+        require((mintIndex <= maxSupply), "Sold out");
+        require((msg.value >= mintPriceInWei), "Not enough fund");
         // Max mint is 6, not stored in storage variable for performance reasons
-        require((_mintsPerUser[msg.sender] < 6), "No more mint for user");
+        require((mintsPerUser[msg.sender] < 6), "No more mint for user");
 
-        _mintsPerUser[msg.sender] += 1;
+        mintsPerUser[msg.sender] += 1;
         _nextTokenId.increment();
         _safeMint(msg.sender, mintIndex);
     }
 
     function mintGold(bytes32[] calldata _merkleProof) public payable {
         if (merkleRoot != 0) {
-            require(_mintsPerUser[msg.sender] == 0, "Address has already claimed");
+            require(mintsPerUser[msg.sender] == 0, "Address has already claimed");
             bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
             require(MerkleProof.verify(_merkleProof, merkleRoot, leaf), "Address not in goldlist");
         }
         uint256 mintIndex = _nextTokenId.current();
-        require((mintIndex < maxSupply) || (mintIndex == maxSupply), "Sold out");
-        require((msg.value > mintPriceInWei) || (msg.value == mintPriceInWei), "Not enough fund");
+        require((mintIndex <= maxSupply), "Sold out");
+        require((msg.value >= mintPriceInWei), "Not enough fund");
 
-        _mintsPerUser[msg.sender] += 1;
+        mintsPerUser[msg.sender] += 1;
         _nextTokenId.increment();
         _safeMint(msg.sender, mintIndex);
     }
