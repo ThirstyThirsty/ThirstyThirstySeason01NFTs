@@ -52,73 +52,89 @@ describe('ThirstyThirstySeason01', () => {
     )
   })
 
-  it('should be deployable', async () => {
-    expect(contract).to.exist
+  describe('deployment', () => {
+    it('should be deployable', async () => {
+      expect(contract).to.exist
+    })
+
+    it('should increment token ID counter to 1 upon deployment', async () => {
+      await expect(contract.nextTokenID()).to.eventually.equal('1')
+    })
   })
 
-  it('should increment token ID counter to 1 upon deployment', async () => {
-    await expect(contract.nextTokenID()).to.eventually.equal('1')
+  describe('getters', () => {
+    it('should return the current token ID with #nextTokenID', async () => {
+      await expect(contract.nextTokenID()).to.eventually.equal('1')
+    })
+
+    it('should return the number of minted items with #numOfMints', async () => {
+      await expect(contract.numOfMints()).to.eventually.equal('0')
+      await contract.mint({value: ethers.utils.parseEther('0.3')})
+      await expect(contract.numOfMints()).to.eventually.equal('1')
+    })
+
+    it("should fail if trying to call #tokenURI on non-existent token", async () => {
+      await expect(contract.tokenURI('1'))
+        .to.be.eventually.rejectedWith('URI query for nonexistent token')
+    })
+
+    it("should return an existing token's full URI with #tokenURI", async () => {
+      await contract.mint({value: ethers.utils.parseEther('0.3')})
+      await expect(contract.tokenURI('1')).to.eventually.equal(`${baseURI}1`)
+    })
   })
 
-  it('should return the current token ID with #nextTokenID', async () => {
-    await expect(contract.nextTokenID()).to.eventually.equal('1')
+  describe('#setMerkleRoot', () => {
+    it('should update Merkle root value using #setMerkleRoot', async () => {
+      let value = await contract.merkleRoot()
+      expect(+value).to.equal(0)
+
+      value = '0x81cd02ab7e569e8bcd9317e2fe99f2de44d49ab2b8851ba4a308000000000000'
+      await contract.setMerkleRoot(value)
+      await expect(contract.merkleRoot()).to.eventually.equal(value)
+    })
+
+    it('prevents non-owner to #setMerkleRoot', async () => {
+      const notOwner = (await ethers.getSigners())[1]
+      await expect(contract.connect(notOwner).setMerkleRoot('0x81cd02ab7e569e8bcd9317e2fe99f2de44d49ab2b8851ba4a308000000000000'))
+        .to.be.rejectedWith('Ownable: caller is not the owner')
+    })
   })
 
-  it('should return the number of minted items with #numOfMints', async () => {
-    await expect(contract.numOfMints()).to.eventually.equal('0')
-    await contract.mint({value: ethers.utils.parseEther('0.3')})
-    await expect(contract.numOfMints()).to.eventually.equal('1')
+  describe('#pause / #unpause', () => {
+    it('should pause and unpause contract when owner asks for it', async () => {
+      await expect(contract.paused()).to.eventually.equal(false)
+      await contract.pause()
+      await expect(contract.paused()).to.eventually.equal(true)
+      await contract.unpause()
+      await expect(contract.paused()).to.eventually.equal(false)
+    })
+
+    it('prevents non-owner to use pause functionality', async () => {
+      const notOwner = (await ethers.getSigners())[1]
+      await expect(contract.connect(notOwner).pause())
+        .to.be.eventually.rejectedWith('Ownable: caller is not the owner')
+      await expect(contract.connect(notOwner).unpause())
+        .to.be.eventually.rejectedWith('Ownable: caller is not the owner')
+    })
   })
 
-  it('should update Merkle root value using #setMerkleRoot', async () => {
-    let value = await contract.merkleRoot()
-    expect(+value).to.equal(0)
+  describe('#setProxyRegistryAddress', () => {
+    it('prevents non-owner to use #setProxyRegistryAddress', async () => {
+      const notOwner = (await ethers.getSigners())[1]
+      await expect(contract.connect(notOwner).setProxyRegistryAddress(openSeaProxyRegistryAddress))
+        .to.be.eventually.rejectedWith('Ownable: caller is not the owner')
+    })
 
-    value = '0x81cd02ab7e569e8bcd9317e2fe99f2de44d49ab2b8851ba4a308000000000000'
-    await contract.setMerkleRoot(value)
-    await expect(contract.merkleRoot()).to.eventually.equal(value)
-  })
-
-  it('should pause and unpause contract when owner asks for it', async () => {
-    await expect(contract.paused()).to.eventually.equal(false)
-    await contract.pause()
-    await expect(contract.paused()).to.eventually.equal(true)
-    await contract.unpause()
-    await expect(contract.paused()).to.eventually.equal(false)
-  })
-
-  it('prevents non-owner to use pause functionality', async () => {
-    const notOwner = (await ethers.getSigners())[1]
-    await expect(contract.connect(notOwner).pause())
-      .to.be.eventually.rejectedWith('Ownable: caller is not the owner')
-    await expect(contract.connect(notOwner).unpause())
-      .to.be.eventually.rejectedWith('Ownable: caller is not the owner')
-  })
-
-  it("should fail if trying to call #tokenURI on non-existent token", async () => {
-    await expect(contract.tokenURI('1'))
-      .to.be.eventually.rejectedWith('URI query for nonexistent token')
-  })
-
-  it("should return an existing token's full URI with #tokenURI", async () => {
-    await contract.mint({value: ethers.utils.parseEther('0.3')})
-    await expect(contract.tokenURI('1')).to.eventually.equal(`${baseURI}1`)
-  })
-
-  it('prevents non-owner to use #setProxyRegistryAddress', async () => {
-    const notOwner = (await ethers.getSigners())[1]
-    await expect(contract.connect(notOwner).setProxyRegistryAddress(openSeaProxyRegistryAddress))
-      .to.be.eventually.rejectedWith('Ownable: caller is not the owner')
-  })
-
-  it('updates proxyRegistryAddress with #setProxyRegistryAddress', async () => {
-    const addr = (await contract.proxyRegistryAddress()).toLowerCase()
-    const newAddr = '0xa5409ec958c83c3f309868babaca7c86dcb077c1'
-    expect(addr).to.equal(openSeaProxyRegistryAddress.toLowerCase())
-    await expect(contract.setProxyRegistryAddress(newAddr))
-      .not.to.be.rejected
-    const updatedAddr = (await contract.proxyRegistryAddress()).toLowerCase()
-    expect(updatedAddr).to.equal(newAddr)
+    it('updates proxyRegistryAddress with #setProxyRegistryAddress', async () => {
+      const addr = (await contract.proxyRegistryAddress()).toLowerCase()
+      const newAddr = '0xa5409ec958c83c3f309868babaca7c86dcb077c1'
+      expect(addr).to.equal(openSeaProxyRegistryAddress.toLowerCase())
+      await expect(contract.setProxyRegistryAddress(newAddr))
+        .not.to.be.rejected
+      const updatedAddr = (await contract.proxyRegistryAddress()).toLowerCase()
+      expect(updatedAddr).to.equal(newAddr)
+    })
   })
 
   describe('#mint', () => {
