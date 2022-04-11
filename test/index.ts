@@ -7,6 +7,8 @@ import asPromised from 'chai-as-promised'
 
 use(asPromised)
 
+const openSeaProxyRegistryAddress = '0xf57b2c51ded3a29e6891aba85459d600256cf317'
+
 const createAndDeploy = async (
   name: string,
   symbol: string,
@@ -20,6 +22,7 @@ const createAndDeploy = async (
     name,
     symbol,
     baseURI,
+    openSeaProxyRegistryAddress,
     supply,
     price,
     merkleRoot
