@@ -105,6 +105,22 @@ describe('ThirstyThirstySeason01', () => {
     await expect(contract.tokenURI('1')).to.eventually.equal(`${baseURI}1`)
   })
 
+  it('prevents non-owner to use #setProxyRegistryAddress', async () => {
+    const notOwner = (await ethers.getSigners())[1]
+    await expect(contract.connect(notOwner).setProxyRegistryAddress(openSeaProxyRegistryAddress))
+      .to.be.eventually.rejectedWith('Ownable: caller is not the owner')
+  })
+
+  it('updates proxyRegistryAddress with #setProxyRegistryAddress', async () => {
+    const addr = (await contract.proxyRegistryAddress()).toLowerCase()
+    const newAddr = '0xa5409ec958c83c3f309868babaca7c86dcb077c1'
+    expect(addr).to.equal(openSeaProxyRegistryAddress.toLowerCase())
+    await expect(contract.setProxyRegistryAddress(newAddr))
+      .not.to.be.rejected
+    const updatedAddr = (await contract.proxyRegistryAddress()).toLowerCase()
+    expect(updatedAddr).to.equal(newAddr)
+  })
+
   describe('#mint', () => {
     beforeEach(async () => {
       contract = await createAndDeploy(
