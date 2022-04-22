@@ -3,7 +3,9 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-import { ethers } from 'hardhat';
+import hre, { ethers } from 'hardhat';
+
+const openSeaProxyRegistryAddress = '0xf57b2c51ded3a29e6891aba85459d600256cf317';
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -11,15 +13,55 @@ async function main() {
   //
   // If this script is run directly using `node` you may want to call compile
   // manually to make sure everything is compiled
-  // await hre.run('compile');
+  await hre.run('compile');
 
-  // We get the contract to deploy
-  const Greeter = await ethers.getContractFactory('Greeter');
-  const greeter = await Greeter.deploy('Hello, Hardhat!');
+  const Factory = await ethers.getContractFactory('ThirstyThirstySeason01');
+  const tierCellar = await Factory.deploy(
+    'Thirsty Thirsty Season 1 - "Cellar"',
+    'TT',
+    '',
+    openSeaProxyRegistryAddress,
+    270,
+    ethers.utils.parseEther('0.3'),
+    ethers.utils.hexZeroPad('0x00', 32)
+  );
+  const tierTable = await Factory.deploy(
+    'Thirsty Thirsty Season 1 - "Table"',
+    'TT',
+    '',
+    openSeaProxyRegistryAddress,
+    418,
+    ethers.utils.parseEther('0.3'),
+    ethers.utils.hexZeroPad('0x00', 32)
+  );
+  const tierTableGold = await Factory.deploy(
+    'Thirsty Thirsty Season 1 - "Table" Goldlist',
+    'TT',
+    '',
+    openSeaProxyRegistryAddress,
+    100,
+    ethers.utils.parseEther('0.3'),
+    ethers.utils.hexZeroPad('0x00', 32)
+  );
+  const tierFrens = await Factory.deploy(
+    'Thirsty Thirsty Season 1 - "Frens & Fams"',
+    'TT',
+    '',
+    openSeaProxyRegistryAddress,
+    100,
+    ethers.utils.parseEther('0'),
+    ethers.utils.hexZeroPad('0x00', 32)
+  );
 
-  await greeter.deployed();
+  await tierCellar.deployed();
+  await tierTable.deployed();
+  await tierTableGold.deployed();
+  await tierFrens.deployed();
 
-  console.log('Greeter deployed to:', greeter.address);
+  console.log('"Cellar" deployed to:', tierCellar.address);
+  console.log('"Table" deployed to:', tierTable.address);
+  console.log('"Table Gold" deployed to:', tierTableGold.address);
+  console.log('"Frens & Fam" deployed to:', tierFrens.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
