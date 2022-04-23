@@ -31,7 +31,7 @@ async function main() {
     '',
     openSeaProxyRegistryAddress,
     418,
-    ethers.utils.parseEther('0.3'),
+    ethers.utils.parseEther('0.17'),
     ethers.utils.hexZeroPad('0x00', 32)
   );
   const tierTableGold = await Factory.deploy(
@@ -40,7 +40,7 @@ async function main() {
     '',
     openSeaProxyRegistryAddress,
     100,
-    ethers.utils.parseEther('0.3'),
+    ethers.utils.parseEther('0.07'),
     ethers.utils.hexZeroPad('0x00', 32)
   );
   const tierFrens = await Factory.deploy(
