@@ -262,6 +262,66 @@ describe('ThirstyThirstySeason01', () => {
       ).to.be.eventually.rejectedWith('Address not in goldlist')
     })
 
+    it('should fail if user attempts to mint more than 6 tokens', async () => {
+      const users = await ethers.getSigners()
+      const whitelistAddresses = [
+        users[1].address,
+        users[2].address,
+        users[5].address
+      ]
+      const merkleTree = generateMerkleTree(whitelistAddresses)
+      const merkleRoot = '0x' + merkleTree.getRoot().toString('hex')
+
+      contract = await createAndDeploy(
+        'ThirstyThirsty',
+        'TT',
+        baseURI,
+        10,
+        ethers.utils.parseEther('0.05'),
+        merkleRoot
+      )
+
+      await expect(
+        contract
+          .connect(users[5])
+          .mint({value: ethers.utils.parseEther('0.05')})
+        ).to.not.be.eventually.rejected
+      await expect(
+        contract
+          .connect(users[5])
+          .mint({value: ethers.utils.parseEther('0.05')})
+        ).to.not.be.eventually.rejected
+      await expect(
+        contract
+          .connect(users[5])
+          .mint({value: ethers.utils.parseEther('0.05')})
+        ).to.not.be.eventually.rejected
+      await expect(
+        contract
+          .connect(users[5])
+          .mint({value: ethers.utils.parseEther('0.05')})
+        ).to.not.be.eventually.rejected
+      await expect(
+        contract
+          .connect(users[5])
+          .mint({value: ethers.utils.parseEther('0.05')})
+        ).to.not.be.eventually.rejected
+      await expect(
+        contract
+          .connect(users[5])
+          .mint({value: ethers.utils.parseEther('0.05')})
+        ).to.not.be.eventually.rejected
+
+      await expect(
+        contract
+          .connect(users[5])
+          .mintGold(
+            merkleTree.getHexProof(keccak256(users[5].address)),
+            {value: ethers.utils.parseEther('0.05')}
+          )
+      ).to.be.eventually.rejectedWith('No more mint for user')
+    })
+
     it('should fail minting if address has already minted', async () => {
       const user = (await ethers.getSigners())[0]
       const merkleTree = generateMerkleTree([user.address])

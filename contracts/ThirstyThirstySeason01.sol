@@ -71,6 +71,7 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
     }
 
     function mintGold(bytes32[] calldata _merkleProof) public payable {
+        require((mintsPerUser[msg.sender] < 6), "No more mint for user");
         if (merkleRoot != 0) {
             require(mintsPerUser[msg.sender] == 0, "Address has already claimed");
             bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
