@@ -86,6 +86,16 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         _safeMint(msg.sender, mintIndex);
     }
 
+    function airdrop(address _to) public onlyOwner {
+        require((mintsPerUser[_to] < 6), "No more mint for user");
+
+        uint256 mintIndex = _nextTokenId.current();
+        require((mintIndex <= maxSupply), "Sold out");
+        mintsPerUser[_to] += 1;
+        _nextTokenId.increment();
+        _safeMint(_to, mintIndex);
+    }
+
     function nextTokenID() public view returns (uint256) {
         return _nextTokenId.current();
     }

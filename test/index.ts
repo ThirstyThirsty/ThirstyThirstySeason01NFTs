@@ -422,4 +422,39 @@ describe('ThirstyThirstySeason01', () => {
       ).to.be.eventually.rejectedWith('Not enough fund')
     })
   })
-});
+
+  describe('#airdrop', () => {
+    it('prevents non-owner to use #airdrop', async () => {
+      const notOwner = (await ethers.getSigners())[1]
+      await expect(contract.connect(notOwner).airdrop('0x70997970c51812dc3a010c7d01b50e0d17dc79c8'))
+        .to.be.rejectedWith('Ownable: caller is not the owner')
+    })
+
+    it('should revert if recipient wallet already owns 6 tokens', async () => {
+      const recipient = (await ethers.getSigners())[1]
+      await expect(contract.connect(recipient).mint({value: ethers.utils.parseEther('0.3')}))
+        .to.not.be.eventually.rejected
+      await expect(contract.connect(recipient).mint({value: ethers.utils.parseEther('0.3')}))
+        .to.not.be.eventually.rejected
+      await expect(contract.connect(recipient).mint({value: ethers.utils.parseEther('0.3')}))
+        .to.not.be.eventually.rejected
+      await expect(contract.connect(recipient).mint({value: ethers.utils.parseEther('0.3')}))
+        .to.not.be.eventually.rejected
+      await expect(contract.connect(recipient).mint({value: ethers.utils.parseEther('0.3')}))
+        .to.not.be.eventually.rejected
+      await expect(contract.connect(recipient).mint({value: ethers.utils.parseEther('0.3')}))
+        .to.not.be.eventually.rejected
+
+      await expect(contract.airdrop(recipient.address))
+        .to.be.eventually.rejectedWith('No more mint for user')
+    })
+
+    it('should mint a token to recipient wallet passed as argument', async () => {
+      const recipient = (await ethers.getSigners())[1]
+      await expect(contract.balanceOf(recipient.address)).to.be.eventually.equal('0')
+
+      await expect(contract.airdrop(recipient.address))
+      await expect(contract.balanceOf(recipient.address)).to.be.eventually.equal('1')
+    })
+  })
+})
