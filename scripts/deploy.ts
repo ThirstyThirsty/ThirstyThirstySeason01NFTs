@@ -4,8 +4,7 @@
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 import hre, { ethers } from 'hardhat';
-
-const openSeaProxyRegistryAddress = '0xf57b2c51ded3a29e6891aba85459d600256cf317';
+import { openSeaProxyRegistryAddress } from '../utils/constants'
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command

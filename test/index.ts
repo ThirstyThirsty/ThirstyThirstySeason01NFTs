@@ -4,10 +4,9 @@ import { Contract, BigNumber } from 'ethers'
 import { MerkleTree } from 'merkletreejs'
 import keccak256 from 'keccak256'
 import asPromised from 'chai-as-promised'
+import { openSeaProxyRegistryAddress } from '../utils/constants'
 
 use(asPromised)
-
-const openSeaProxyRegistryAddress = '0xf57b2c51ded3a29e6891aba85459d600256cf317'
 
 const createAndDeploy = async (
   name: string,
