@@ -1,7 +1,7 @@
 import { expect, use } from 'chai'
 import { ethers } from 'hardhat'
 import { Contract, BigNumber } from 'ethers'
-import { MerkleTree } from 'merkletreejs'
+import { generateMerkleTree, getMerkleRoot } from '../utils/goldlist'
 import keccak256 from 'keccak256'
 import asPromised from 'chai-as-promised'
 import { openSeaProxyRegistryAddress } from '../utils/constants'
@@ -28,12 +28,6 @@ const createAndDeploy = async (
   )
   await contract.deployed()
   return contract
-}
-
-const generateMerkleTree = (whitelistAddresses: string[]) => {
-  const leafNodes = whitelistAddresses.map(addr => keccak256(addr))
-  const merkleTree = new MerkleTree(leafNodes, keccak256, { sortPairs: true })
-  return merkleTree
 }
 
 describe('ThirstyThirstySeason01', () => {
@@ -210,7 +204,7 @@ describe('ThirstyThirstySeason01', () => {
         users[5].address
       ]
       const merkleTree = generateMerkleTree(whitelistAddresses)
-      const merkleRoot = '0x' + merkleTree.getRoot().toString('hex')
+      const merkleRoot = getMerkleRoot(merkleTree)
 
       contract = await createAndDeploy(
         'ThirstyThirsty',
@@ -269,7 +263,7 @@ describe('ThirstyThirstySeason01', () => {
         users[5].address
       ]
       const merkleTree = generateMerkleTree(whitelistAddresses)
-      const merkleRoot = '0x' + merkleTree.getRoot().toString('hex')
+      const merkleRoot = getMerkleRoot(merkleTree)
 
       contract = await createAndDeploy(
         'ThirstyThirsty',
@@ -324,7 +318,7 @@ describe('ThirstyThirstySeason01', () => {
     it('should fail minting if address has already minted', async () => {
       const user = (await ethers.getSigners())[0]
       const merkleTree = generateMerkleTree([user.address])
-      const merkleRoot = '0x' + merkleTree.getRoot().toString('hex')
+      const merkleRoot = getMerkleRoot(merkleTree)
 
       contract = await createAndDeploy(
         'ThirstyThirsty',
@@ -355,7 +349,7 @@ describe('ThirstyThirstySeason01', () => {
     it('should fail minting if address all available tokens have been minted', async () => {
       const user = (await ethers.getSigners())[0]
       const merkleTree = generateMerkleTree([user.address])
-      const merkleRoot = '0x' + merkleTree.getRoot().toString('hex')
+      const merkleRoot = getMerkleRoot(merkleTree)
 
       contract = await createAndDeploy(
         'ThirstyThirsty',
@@ -378,7 +372,7 @@ describe('ThirstyThirstySeason01', () => {
     it('should fail minting if address all available tokens have been minted', async () => {
       const user = (await ethers.getSigners())[0]
       const merkleTree = generateMerkleTree([user.address])
-      const merkleRoot = '0x' + merkleTree.getRoot().toString('hex')
+      const merkleRoot = getMerkleRoot(merkleTree)
 
       contract = await createAndDeploy(
         'ThirstyThirsty',
@@ -401,7 +395,7 @@ describe('ThirstyThirstySeason01', () => {
     it('should fail minting if not enough fund sent', async () => {
       const user = (await ethers.getSigners())[0]
       const merkleTree = generateMerkleTree([user.address])
-      const merkleRoot = '0x' + merkleTree.getRoot().toString('hex')
+      const merkleRoot = getMerkleRoot(merkleTree)
 
       contract = await createAndDeploy(
         'ThirstyThirsty',
