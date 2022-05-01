@@ -1,3 +1,4 @@
+./scripts/goldlist.json
 node_modules
 .env
 coverage
