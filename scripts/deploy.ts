@@ -40,7 +40,8 @@ async function main() {
     openSeaProxyRegistryAddress,
     100,
     ethers.utils.parseEther('0.07'),
-    ethers.utils.hexZeroPad('0x00', 32)
+    '0x31ee47f7fbec35a75a75ee71d0d72c71970c5cc8ecf2f7f5ec4e39a5f40adade', // CHANGE WITH MOST RECENT MERKLE ROOT
+    // ethers.utils.hexZeroPad('0x00', 32)
   );
   const tierFrens = await Factory.deploy(
     'Thirsty Thirsty Season 1 - "Frens & Fams"',

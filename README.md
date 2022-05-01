@@ -62,18 +62,10 @@ The project is setup to enable using MetaMask on the Hardhat node. To do so, con
 
 There is an allow-list ("goldlist") system for the "Table" tier.
 
-It has a list of wallets with the privilege to mint a chunk of that tier at a lower price point. For performance and security purposes, _we are never storing this list anywhere on this application._ Not on the website's database, nor on the smart contract. Ever.
+It has a list of wallets with the privilege to mint a chunk of that tier at a lower price point.
+We are using a [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree) to handle list verification.
 
-Instead, we are using a [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree), which is a useful cryptographic data structure that helps doing the following process for our purpose:
-
-1. Turn the goldlist of wallets (public keys) using a Merkle Tree algorithm.
-2. Store the hash called "Merkle root" in the site's DB. The "Merkle root" is like a signature of this specific tree.
-3. Use a specific Merkle tree algo to compare any wallet's public key to the "Merkle root".
-4. Comparison will yield a positive answer if the public key belongs to the tree (i.e. the wallet address is in the goldlist), a negative otherwise, without ever giving away the original list.
-
-In our implementation, we use a dedicated script to generate a "Merkle root" for the goldlist.
-
-#### Generate a new Merkle root for the goldlist
+#### Generate a new Merkle tree for the goldlist
 
 1. In the `scripts` directory, create a `goldlist.json` file based on `scripts/goldfile.example.json`:
 
@@ -91,15 +83,19 @@ cp ./scripts/goldlist.example.json ./scripts/goldlist.json
 npx hardhat run scripts/merkle-root.ts
 ```
 
-4. The console will print out a few things, ending the new "Merkle root":
+4. The console will print out a few things, including a line mentioning a "Merkle root":
 
 ```
 Merkle root generated: 0x31ee47f7fbec35a75a75ee71d0d72c71970c5cc8ecf2f7f5ec4e39a5f40adade
 ```
 
-5. Copy the hash (in this example, `0x31ee47f7fbec35a75a75ee71d0d72c71970c5cc8ecf2f7f5ec4e39a5f40adade`) and use.
+5. Copy the hash (in this example, `0x31ee47f7fbec35a75a75ee71d0d72c71970c5cc8ecf2f7f5ec4e39a5f40adade`).
 
-6. In the minting website, update the environment variable `MERKLE_ROOT` to use this hash as value.
+6. Update the Merkle root stored in the "Table (Goldlist)" instance deployed on various nets (see addresses at the end of the README) using the `setMerkleRoot` method of the contract.
+
+7. In the last line of the console prints mentioned above, you'll find a long list of addresses separated by commas. Copy it.
+
+8. In the minting webapp, update the environment variable `GOLDLIST` to use the list you just copied.
 
 ## Deployment of smart contract
 
