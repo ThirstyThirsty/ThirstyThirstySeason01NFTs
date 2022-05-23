@@ -4,30 +4,24 @@ import { Contract, BigNumber, BigNumberish } from 'ethers'
 import { generateMerkleTree, getMerkleRoot } from '../utils/goldlist'
 import keccak256 from 'keccak256'
 import asPromised from 'chai-as-promised'
-import { openSeaProxyRegistryAddress } from '../utils/constants'
+import {
+  openSeaProxyRegistryAddress,
+  priceCellar,
+  priceTable,
+  priceTableGold,
+  tierCellarId,
+  tierTableId,
+  tierTableGoldId,
+  tierFriendsId
+} from '../utils/constants'
+import { Tier } from '../utils/structs'
 
 use(asPromised)
-
-const priceCellar = ethers.utils.parseEther('0.4')
-const priceTable = ethers.utils.parseEther('0.2')
-const priceTableGold = ethers.utils.parseEther('0.1')
-
-const tierCellarId = 1
-const tierTableId = 2
-const tierTableGoldId = 3
-const tierFriendsId = 4
 
 const tierCellar = { id: tierCellarId, minted: 0, supply: 270, priceInWei: priceCellar }
 const tierTable = { id: tierTableId, minted: 0, supply: 518, priceInWei: priceTable }
 const tierTableGold = { id: tierTableGoldId, minted: 0, supply: 100, priceInWei: priceTableGold }
 const tierFriends = { id: tierFriendsId, minted: 0, supply: 50, priceInWei: BigNumber.from(0) }
-
-interface Tier {
-  id: BigNumberish
-  minted: BigNumberish
-  supply: BigNumberish
-  priceInWei: BigNumber
-}
 
 const createAndDeploy = async (
   name: string = 'Thirsty Thirsty',
