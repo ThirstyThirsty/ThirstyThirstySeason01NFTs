@@ -1,0 +1,40 @@
+{
+  "description": "Thirsty Thirsty NFT holders become ‘Frens & Fam’ within our food and beverage network. Our NFT acts as a membership passport unlocking epic dining experiences at top wineries and restaurants, community benefits, access to special events and unique products. Get to know the inspiring folks behind the most inspiring food, wine, and land knowledge in the world. To find the latest membership perks check out: <a href='https://thirstythirsty.xyz/'>thirstythirsty.xyz</a>.<br>Terms and conditions apply: <a href='https://thirstythirsty.xyz/terms/'>https://thirstythirsty.xyz/terms/</a>",
+  "external_url": "https://thirstythirsty.xyz/",
+  "image": "https://gateway.pinata.cloud/ipfs/QmP1NQCp7tebAcgCWyonJQsMfh1KDySusWPMu3FATHLKtx",
+  "name": "Thirsty Thirsty NFT",
+  "attributes": [
+    {
+      "trait_type": "Vintage",
+      "value": "Inaugural, 2021 Harvest"
+    },
+    {
+      "trait_type": "Producer",
+      "value": "Phelan Farm, Rajat Parr"
+    },
+    {
+      "trait_type": "Grape",
+      "value": "Pinot Noir"
+    },
+    {
+      "trait_type": "Season",
+      "value": "Strawberry ****(Estival, high summer)"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Fire"
+    },
+    {
+      "trait_type": "Invitation",
+      "value": "Community Rebirth"
+    },
+    {
+      "trait_type": "Artist",
+      "value": "Marleigh Culver"
+    },
+    {
+      "trait_type": "Tier",
+      "value": "Frens & Fam"
+    }
+  ]
+}

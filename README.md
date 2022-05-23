@@ -16,30 +16,27 @@ npm install # or yarn install
 
 > How many different tier and artworks are we planning to use, and how are they dispatched among NFTs?
 
-There are 3 NFT tiers with different pricing, with the same artwork in 3 different colors to distinguish each other.
+There are 3 mintable NFT types — 3 tiers — with different pricing.
 
-- **Tier 1 “Cellar”** - `270 units at $1,000 each` (ETH price TBD)
+- **Tier 1 “Cellar”** - `270 units at 0.4 ETH`
 
 - **Tier 2 “Table”** - `518 units`, including:
 
-  - Normal (mintable by anyone) - `418 units at $500 each` (ETH price TBD)
+  - Normal (mintable by anyone) - `418 units at 0.2 ETH`
 
-  - "Goldlist" (using a Merkle tree) for our Discord members - `100 at $200 each` (ETH price TBD)
+  - "Goldlist" (using a Merkle tree) for our Discord members - `100 at 0.1 ETH`
 
 - **Tier 3 “Frens & Fam”** - `50 units, free (airdropped)`
 
-For the purpose of this collection, the same smart contract is deployed into 4 different instances:
-https://github.com/ThirstyThirsty/ThirstyThirstySeason01NFTs
-- one for the "Cellar" tier;
-- one for the "Table" tier;
-- one for the "Table" tier on a goldlist (at cheaper minting price);
-- one for the "Friends & Fam" tier (airdropped).
-
-The rationale for serving different contracts is to adhere to the ["simplicity" development best-practice](https://consensys.github.io/smart-contract-best-practices/general-philosophy/simplicity/) for Ethereum.
-
-##### About the goldlist
+> What's the goldlist?
 
 The allow-list ("goldlist") for a chunk of the "Table" tier requires a specific technical treatment that is detailed under the **Development** section of this README.
+
+> Is there an enabling/disabling process for the mint?
+
+The smart contract provides a boolean flag, `isMintStarted`, with a matching setter method, `setMintStarted(bool)` usable by the contract owner. When `isMintStarted` is `false`, only goldlisted-mints can happen. Call to the regular `mint` (non-gold) method will fail. **Call to the goldlist minting (`mintGold()`) will still be enabled no matter what.
+
+There are also `pause`/`unpause` methods for the contract owner, acting as a classic ERC-721 contract fail-switch.
 
 ## Development
 
@@ -64,6 +61,10 @@ There is an allow-list ("goldlist") system for the "Table" tier.
 
 It has a list of wallets with the privilege to mint a chunk of that tier at a lower price point.
 We are using a [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree) to handle list verification.
+
+Goldlist minting happens through the `mintGold(bytes32[])` method of the contract, taking a merkle proof as argument (see implementation on the [mint website repo](#)).
+
+Goldlisted users can mint at a cheaper price point, but they can also mint before others (non-gold) users. They can also mint when regular users can't (i.e. no matter the value of `isMintStarted`).
 
 #### Generate a new Merkle tree for the goldlist
 
@@ -93,9 +94,7 @@ Merkle root generated: 0x31ee47f7fbec35a75a75ee71d0d72c71970c5cc8ecf2f7f5ec4e39a
 
 6. Update the Merkle root stored in the "Table (Goldlist)" instance deployed on various nets (see addresses at the end of the README) using the `setMerkleRoot` method of the contract.
 
-7. In the last line of the console prints mentioned above, you'll find a long list of addresses separated by commas. Copy it.
-
-8. In the minting webapp, update the environment variable `GOLDLIST` to use the list you just copied.
+The mint website has its own instruction in regards to implementing the Goldlist. After you're through with the steps above, and if you're using the minting website as well, check out the [repo](#) for the final instructions.
 
 ## Deployment of smart contract
 
@@ -127,15 +126,11 @@ npx hardhat run scripts/deploy.ts --network rinkeby
 
 ## Contract addresses
 
-Here are the up-to-date contract addresses on Rinkeby.
-
-### Rinkeby
+Here are the up-to-date contract addresses on various Ethereum networks.
 
 ```
-- "Cellar"        0x2011bDd9de56e3ad9b730948e4179df474eeE37E
-- "Table"         0xc6C643944519350F2b13365C17210118E7087E2a
-- "Table Gold"    0xcBcf0BdA4b151bf86912f6534f958901D130486b
-- "Frens & Fam"   0x4209948b3B1f0ce21E0dcCFaAcF4ABA3E2B913F6
+- Rinkeby        TBD
+- Mainnet        TBD
 ```
 
 ## Contributing
