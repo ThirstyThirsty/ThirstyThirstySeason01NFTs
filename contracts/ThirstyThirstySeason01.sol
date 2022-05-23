@@ -58,7 +58,12 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
     /**
      * @dev Count the current number of NFT minted by each user.
      */
-    mapping(address => uint8) private mintsPerUser;
+    mapping(address => uint64) private mintsPerUser;
+
+    /**
+     * @dev Map ID of minted token to its Tier ID.
+     */
+    mapping(uint256 => uint64) private tokenIdToTierId;
 
     /**
      * @dev TIER IDs | supply | price in wei | human-readable name
@@ -121,6 +126,7 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
 
         mintsPerUser[msg.sender] += 1;
         tier.minted += 1;
+        tokenIdToTierId[mintIndex] = _tierId;
         nextTokenId.increment();
         _safeMint(msg.sender, mintIndex);
     }
@@ -137,6 +143,7 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         uint256 mintIndex = nextTokenId.current();
         mintsPerUser[msg.sender] += 1;
         tierTableGold.minted += 1;
+        tokenIdToTierId[mintIndex] = tierTableGold.id;
         nextTokenId.increment();
         _safeMint(msg.sender, mintIndex);
     }
@@ -148,6 +155,7 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
 
         mintsPerUser[msg.sender] += 1;
         tierFriends.minted += 1;
+        tokenIdToTierId[mintIndex] = tierFriends.id;
         nextTokenId.increment();
         _safeMint(_to, mintIndex);
     }
@@ -174,7 +182,11 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
 
     function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
         require(_exists(_tokenId), "URI query for nonexistent token");
-        return super.tokenURI(_tokenId);
+
+        // Fetch tokenURI based on the tier ID.
+        // Four metadata files exist -- one per tier.
+        uint64 tierId = tokenIdToTierId[_tokenId];
+        return string(abi.encodePacked(super.tokenURI(tierId), ".json"));
     }
 
     function setMerkleRoot(bytes32 _merkleRoot) public onlyOwner {

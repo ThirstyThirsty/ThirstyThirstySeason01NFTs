@@ -5,23 +5,23 @@ import { generateMerkleTree, getMerkleRoot } from '../utils/goldlist'
 import keccak256 from 'keccak256'
 import asPromised from 'chai-as-promised'
 import {
-  openSeaProxyRegistryAddress,
-  priceCellar,
-  priceTable,
-  priceTableGold,
-  tierCellarId,
-  tierTableId,
-  tierTableGoldId,
-  tierFriendsId
+  OS_PROXY_ADDR,
+  PRICE_CELLAR,
+  PRICE_TABLE,
+  PRICE_TABLE_GOLD,
+  TIER_CELLAR_ID,
+  TIER_TABLE_ID,
+  TIER_TABLE_GOLD_ID,
+  TIER_FRENS_ID
 } from '../utils/constants'
 import { Tier } from '../utils/structs'
 
 use(asPromised)
 
-const tierCellar = { id: tierCellarId, minted: 0, supply: 270, priceInWei: priceCellar }
-const tierTable = { id: tierTableId, minted: 0, supply: 518, priceInWei: priceTable }
-const tierTableGold = { id: tierTableGoldId, minted: 0, supply: 100, priceInWei: priceTableGold }
-const tierFriends = { id: tierFriendsId, minted: 0, supply: 50, priceInWei: BigNumber.from(0) }
+const tierCellar = { id: TIER_CELLAR_ID, minted: 0, supply: 270, priceInWei: PRICE_CELLAR }
+const tierTable = { id: TIER_TABLE_ID, minted: 0, supply: 518, priceInWei: PRICE_TABLE }
+const tierTableGold = { id: TIER_TABLE_GOLD_ID, minted: 0, supply: 100, priceInWei: PRICE_TABLE_GOLD }
+const tierFriends = { id: TIER_FRENS_ID, minted: 0, supply: 50, priceInWei: BigNumber.from(0) }
 
 const createAndDeploy = async (
   name: string = 'Thirsty Thirsty',
@@ -40,7 +40,7 @@ const createAndDeploy = async (
     symbol,
     baseURI,
     isMintStarted,
-    openSeaProxyRegistryAddress,
+    OS_PROXY_ADDR,
     tier1,
     tier2,
     tier3,
@@ -76,7 +76,7 @@ describe('ThirstyThirstySeason01', () => {
 
     it('should return the number of minted items with #totalMinted', async () => {
       await expect(contract.totalMinted()).to.eventually.equal('0')
-      await contract.mint(tierCellarId, { value: priceCellar })
+      await contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
       await expect(contract.totalMinted()).to.eventually.equal('1')
     })
 
@@ -85,9 +85,11 @@ describe('ThirstyThirstySeason01', () => {
         .to.be.eventually.rejectedWith('URI query for nonexistent token')
     })
 
-    it("should return an existing token's full URI with #tokenURI", async () => {
-      await contract.mint(tierCellarId, { value: priceCellar })
-      await expect(contract.tokenURI('1')).to.eventually.equal(`${baseURI}1`)
+    it.only("should return a token's full URI, matching the token's tier ID, with #tokenURI", async () => {
+      await contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
+      await contract.mint(TIER_TABLE_ID, { value: PRICE_TABLE })
+      await expect(contract.tokenURI('1')).to.eventually.equal(`${baseURI}${TIER_CELLAR_ID}.json`)
+      await expect(contract.tokenURI('2')).to.eventually.equal(`${baseURI}${TIER_TABLE_ID}.json`)
     })
   })
 
@@ -153,14 +155,14 @@ describe('ThirstyThirstySeason01', () => {
   describe('#setProxyRegistryAddress', () => {
     it('prevents non-owner to use #setProxyRegistryAddress', async () => {
       const notOwner = (await ethers.getSigners())[1]
-      await expect(contract.connect(notOwner).setProxyRegistryAddress(openSeaProxyRegistryAddress))
+      await expect(contract.connect(notOwner).setProxyRegistryAddress(OS_PROXY_ADDR))
         .to.be.eventually.rejectedWith('Ownable: caller is not the owner')
     })
 
     it('updates proxyRegistryAddress with #setProxyRegistryAddress', async () => {
       const addr = (await contract.proxyRegistryAddress()).toLowerCase()
       const newAddr = '0xa5409ec958c83c3f309868babaca7c86dcb077c1'
-      expect(addr).to.equal(openSeaProxyRegistryAddress.toLowerCase())
+      expect(addr).to.equal(OS_PROXY_ADDR.toLowerCase())
       await expect(contract.setProxyRegistryAddress(newAddr))
         .not.to.be.rejected
       const updatedAddr = (await contract.proxyRegistryAddress()).toLowerCase()
@@ -173,12 +175,12 @@ describe('ThirstyThirstySeason01', () => {
       contract = await createAndDeploy('ThirstyThirsty', 'TT', baseURI, false)
       await expect(contract.isMintStarted()).to.eventually.be.false
 
-      await expect(contract.mint(tierCellarId, { value: priceCellar }))
+      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
         .to.be.eventually.rejectedWith('Not yet started')
     })
 
     it('should fail minting if not enough fund sent', async () => {
-      await expect(contract.mint(tierCellarId, { value: ethers.utils.parseEther('0.1') }))
+      await expect(contract.mint(TIER_CELLAR_ID, { value: ethers.utils.parseEther('0.1') }))
         .to.be.eventually.rejectedWith('Not enough fund')
     })
 
@@ -189,31 +191,31 @@ describe('ThirstyThirstySeason01', () => {
         { ...tierCellar, supply: 0 }
       )
 
-      await expect(contract.mint(tierCellarId, { value: priceCellar }))
+      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
         .to.be.eventually.rejectedWith('Sold out')
     })
 
     it('should fail if user attempts to mint more than 6 tokens', async () => {
       contract = await createAndDeploy()
 
-      await expect(contract.mint(tierCellarId, { value: priceCellar }))
+      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
         .to.not.be.eventually.rejected
-      await expect(contract.mint(tierCellarId, { value: priceCellar }))
+      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
         .to.not.be.eventually.rejected
-      await expect(contract.mint(tierCellarId, { value: priceCellar }))
+      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
         .to.not.be.eventually.rejected
-      await expect(contract.mint(tierCellarId, { value: priceCellar }))
+      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
         .to.not.be.eventually.rejected
-      await expect(contract.mint(tierCellarId, { value: priceCellar }))
+      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
         .to.not.be.eventually.rejected
-      await expect(contract.mint(tierCellarId, { value: priceCellar }))
+      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
         .to.not.be.eventually.rejected
-      await expect(contract.mint(tierCellarId, { value: priceCellar }))
+      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
         .to.be.eventually.rejectedWith('No more mint for user')
     })
 
     it('should mint a new token and increment next token ID', async () => {
-      await expect(contract.mint(tierCellarId, { value: priceCellar }))
+      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
         .to.not.be.eventually.rejected
       await expect(contract.totalMinted()).to.eventually.equal('1')
       await expect(contract.nextTokenID()).to.eventually.equal('2')
@@ -240,7 +242,7 @@ describe('ThirstyThirstySeason01', () => {
           .connect(users[1])
           .mintGold(
             merkleTree.getHexProof(keccak256(users[1].address)),
-            { value: priceTableGold }
+            { value: PRICE_TABLE_GOLD }
           )
       ).to.not.be.eventually.rejected
 
@@ -252,7 +254,7 @@ describe('ThirstyThirstySeason01', () => {
           .connect(users[2])
           .mintGold(
             merkleTree.getHexProof(keccak256(users[2].address)),
-            { value: priceTableGold }
+            { value: PRICE_TABLE_GOLD }
           )
       ).to.not.be.eventually.rejected
 
@@ -261,7 +263,7 @@ describe('ThirstyThirstySeason01', () => {
           .connect(users[5])
           .mintGold(
             merkleTree.getHexProof(keccak256(users[5].address)),
-            { value: priceTableGold }
+            { value: PRICE_TABLE_GOLD }
           )
       ).to.not.be.eventually.rejected
 
@@ -270,7 +272,7 @@ describe('ThirstyThirstySeason01', () => {
           .connect(users[4])
           .mintGold(
             merkleTree.getHexProof(keccak256(users[4].address)),
-            { value: priceTableGold }
+            { value: PRICE_TABLE_GOLD }
           )
       ).to.be.eventually.rejectedWith('Address not in goldlist')
     })
@@ -292,32 +294,32 @@ describe('ThirstyThirstySeason01', () => {
       await expect(
         contract
           .connect(users[5])
-          .mint(tierCellarId, { value: priceCellar })
+          .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
         ).to.not.be.eventually.rejected
       await expect(
         contract
           .connect(users[5])
-          .mint(tierCellarId, { value: priceCellar })
+          .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
         ).to.not.be.eventually.rejected
       await expect(
         contract
           .connect(users[5])
-          .mint(tierCellarId, { value: priceCellar })
+          .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
         ).to.not.be.eventually.rejected
       await expect(
         contract
           .connect(users[5])
-          .mint(tierCellarId, { value: priceCellar })
+          .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
         ).to.not.be.eventually.rejected
       await expect(
         contract
           .connect(users[5])
-          .mint(tierCellarId, { value: priceCellar })
+          .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
         ).to.not.be.eventually.rejected
       await expect(
         contract
           .connect(users[5])
-          .mint(tierCellarId, { value: priceCellar })
+          .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
         ).to.not.be.eventually.rejected
 
       await expect(
@@ -325,7 +327,7 @@ describe('ThirstyThirstySeason01', () => {
           .connect(users[5])
           .mintGold(
             merkleTree.getHexProof(keccak256(users[5].address)),
-            { value: priceTableGold }
+            { value: PRICE_TABLE_GOLD }
           )
       ).to.be.eventually.rejectedWith('No more mint for user')
     })
@@ -343,7 +345,7 @@ describe('ThirstyThirstySeason01', () => {
         contract
           .mintGold(
             merkleTree.getHexProof(keccak256(user.address)),
-            { value: priceTableGold }
+            { value: PRICE_TABLE_GOLD }
           )
       ).not.to.be.eventually.rejected
 
@@ -351,7 +353,7 @@ describe('ThirstyThirstySeason01', () => {
         contract
           .mintGold(
             merkleTree.getHexProof(keccak256(user.address)),
-            { value: priceTableGold }
+            { value: PRICE_TABLE_GOLD }
           )
       ).to.be.eventually.rejectedWith('Address has already claimed')
     })
@@ -371,7 +373,7 @@ describe('ThirstyThirstySeason01', () => {
         contract
           .mintGold(
             merkleTree.getHexProof(keccak256(user.address)),
-            { value: priceTableGold }
+            { value: PRICE_TABLE_GOLD }
           )
       ).to.be.eventually.rejectedWith('Sold out')
     })
@@ -408,17 +410,17 @@ describe('ThirstyThirstySeason01', () => {
 
     it('should revert if recipient wallet already owns 6 tokens', async () => {
       const recipient = (await ethers.getSigners())[1]
-      await expect(contract.connect(recipient).mint(tierCellarId, { value: priceCellar }))
+      await expect(contract.connect(recipient).mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
         .to.not.be.eventually.rejected
-      await expect(contract.connect(recipient).mint(tierCellarId, { value: priceCellar }))
+      await expect(contract.connect(recipient).mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
         .to.not.be.eventually.rejected
-      await expect(contract.connect(recipient).mint(tierCellarId, { value: priceCellar }))
+      await expect(contract.connect(recipient).mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
         .to.not.be.eventually.rejected
-      await expect(contract.connect(recipient).mint(tierCellarId, { value: priceCellar }))
+      await expect(contract.connect(recipient).mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
         .to.not.be.eventually.rejected
-      await expect(contract.connect(recipient).mint(tierCellarId, { value: priceCellar }))
+      await expect(contract.connect(recipient).mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
         .to.not.be.eventually.rejected
-      await expect(contract.connect(recipient).mint(tierCellarId, { value: priceCellar }))
+      await expect(contract.connect(recipient).mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
         .to.not.be.eventually.rejected
 
       await expect(contract.airdrop(recipient.address))
