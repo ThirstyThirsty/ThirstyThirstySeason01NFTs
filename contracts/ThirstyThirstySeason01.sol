@@ -22,12 +22,12 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
     using Counters for Counters.Counter;
 
     /**
-     * @dev TIER IDs
-     * 1 => Cellar
-     * 2 => Table
-     * 3 => Table (goldlist)
-     *
-     * MAX TOKEN A USER CAN MINT: 6
+     * @dev Cut gas cost by using counter instead of ERC721Enumerable's totalSupply.
+     */
+    Counters.Counter private nextTokenId;
+
+    /**
+     * @dev MAX TOKEN A USER CAN MINT: 6
      * Not stored in contract storage for performance reasons.
      */
 
@@ -37,14 +37,15 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
     string private metadataBaseURI;
 
     /**
-     * @dev Cut gas cost by using counter instead of ERC721Enumerable's totalSupply.
-     */
-    Counters.Counter private nextTokenId;
-
-    /**
      * @dev Merkle tree root used to check if a given address is in the goldlist.
      */
     bytes32 public merkleRoot;
+
+    /**
+     * @dev Must be true for regular mints to be allowed.
+     * Goldlist mints can be done no matter what this value is.
+     */
+    bool public isMintStarted;
 
     /**
      * @dev OpenSea proxy to remove listing fees on their site.
@@ -60,49 +61,42 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
     mapping(address => uint8) private mintsPerUser;
 
     /**
-     * @dev Max NFT supply for each tier.
-     * A mapping of tier ID
-     * Tier 1 (Cellar): ...
-     * Tier 2 (Table): ...
-     * Tier 3 (Table, goldlist): ...
+     * @dev TIER IDs | supply | price in wei | human-readable name
+     * 1 | 270 | 0.4 | Cellar
+     * 2 | 518 | 0.2 | Table
+     * 3 | 100 | 0.1 | Table (goldlist)
+     * 4 |  50 | 0   | Friends & Fam
      */
-    mapping(uint8 => uint256) private maxSupplyPerTier;
+    struct Tier {
+        uint64 id;
+        uint64 minted;
+        uint64 supply;
+        uint256 priceInWei;
+    }
 
-    /**
-     * @dev Count current number of mints for each tiers.
-     */
-    mapping(uint8 => uint256) private mintedPerTier;
-
-    /**
-     * @dev Mint price for each tier.
-     * Tier 1 (Cellar): ...
-     * Tier 2 (Table): ...
-     * Tier 3 (Table, goldlist): ...
-     */
-    mapping(uint8 => uint256) private pricePerTier;
+    Tier private tierCellar;
+    Tier private tierTable;
+    Tier private tierTableGold;
+    Tier private tierFriends;
 
     constructor(
         string memory _name,
         string memory _symbol,
         string memory _metadataURI,
+        bool _isMintStarted,
         address _proxyRegistryAddress,
-        uint256 _maxSupplyPerTier1,
-        uint256 _maxSupplyPerTier2,
-        uint256 _maxSupplyPerTier3,
-        uint256 _pricePerTier1,
-        uint256 _pricePerTier2,
-        uint256 _pricePerTier3,
+        Tier memory _tierCellar,
+        Tier memory _tierTable,
+        Tier memory _tierTableGold,
+        Tier memory _tierFriends,
         bytes32 _merkleRoot
     ) ERC721(_name, _symbol) {
-        mintedPerTier[1] = 0;
-        mintedPerTier[2] = 0;
-        mintedPerTier[3] = 0;
-        maxSupplyPerTier[1] = _maxSupplyPerTier1;
-        maxSupplyPerTier[2] = _maxSupplyPerTier2;
-        maxSupplyPerTier[3] = _maxSupplyPerTier3;
-        pricePerTier[1] = _pricePerTier1;
-        pricePerTier[2] = _pricePerTier2;
-        pricePerTier[3] = _pricePerTier3;
+        isMintStarted = _isMintStarted;
+        tierCellar = _tierCellar;
+        tierTable = _tierTable;
+        tierTableGold = _tierTableGold;
+        tierFriends = _tierFriends;
+
         merkleRoot = _merkleRoot;
         proxyRegistryAddress = _proxyRegistryAddress;
         metadataBaseURI = _metadataURI;
@@ -110,15 +104,23 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         nextTokenId.increment();
     }
 
-    function mint(uint8 _tier) public payable {
+    function mint(uint8 _tierId) public payable {
+        require(isMintStarted == true, "Not yet started");
         require((mintsPerUser[msg.sender] < 6), "No more mint for user");
         uint256 mintIndex = nextTokenId.current();
-        require(_tier == 1 || _tier == 2, "Unknown tier");
-        require(mintedPerTier[_tier] < maxSupplyPerTier[_tier], "Sold out");
-        require(msg.value >= pricePerTier[_tier], "Not enough fund");
+        require(_tierId == tierCellar.id || _tierId == tierTable.id, "Unknown tier");
+
+        Tier memory tier;
+        if (_tierId == 1) {
+            tier = tierCellar;
+        } else {
+            tier = tierTable;
+        }
+        require(tier.minted < tier.supply, "Sold out");
+        require(msg.value >= tier.priceInWei, "Not enough fund");
 
         mintsPerUser[msg.sender] += 1;
-        mintedPerTier[_tier] += 1;
+        tier.minted += 1;
         nextTokenId.increment();
         _safeMint(msg.sender, mintIndex);
     }
@@ -126,28 +128,26 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
     function mintGold(bytes32[] calldata _merkleProof) public payable {
         require((mintsPerUser[msg.sender] < 6), "No more mint for user");
         require(merkleRoot != 0, "Merkle root not set");
-        require(mintsPerUser[msg.sender] == 0, "Address has already claimed from goldlist");
+        require(mintsPerUser[msg.sender] == 0, "Address has already claimed");
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
         require(MerkleProof.verify(_merkleProof, merkleRoot, leaf), "Address not in goldlist");
-        uint8 tier = 3;
-        uint256 mintIndex = nextTokenId.current();
-        require(mintedPerTier[tier] < maxSupplyPerTier[tier], "Sold out (goldlist)");
-        require(msg.value >= pricePerTier[tier], "Not enough fund");
+        require(tierTableGold.minted < tierTableGold.supply, "Sold out (goldlist)");
+        require(msg.value >= tierTableGold.priceInWei, "Not enough fund");
 
+        uint256 mintIndex = nextTokenId.current();
         mintsPerUser[msg.sender] += 1;
-        mintedPerTier[tier] += 1;
+        tierTableGold.minted += 1;
         nextTokenId.increment();
         _safeMint(msg.sender, mintIndex);
     }
 
     function airdrop(address _to) public onlyOwner {
         require((mintsPerUser[_to] < 6), "No more mint for user");
-        uint8 tier = 2;
         uint256 mintIndex = nextTokenId.current();
-        require(mintedPerTier[tier] < maxSupplyPerTier[tier], "Sold out");
+        require(tierFriends.minted < tierFriends.supply, "Sold out (airdrop)");
 
-        mintsPerUser[_to] += 1;
-        mintedPerTier[tier] += 1;
+        mintsPerUser[msg.sender] += 1;
+        tierFriends.minted += 1;
         nextTokenId.increment();
         _safeMint(_to, mintIndex);
     }
@@ -156,7 +156,7 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         return nextTokenId.current();
     }
 
-    function numOfMints() public view returns (uint256) {
+    function totalMinted() public view returns (uint256) {
         return nextTokenId.current() - 1;
     }
 
@@ -166,6 +166,10 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
 
     function unpause() public onlyOwner {
         _unpause();
+    }
+
+    function setMintStarted(bool _started) public onlyOwner {
+        isMintStarted = _started;
     }
 
     function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
