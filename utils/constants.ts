@@ -16,4 +16,4 @@ export const MERKLE_ROOT = '0x31ee47f7fbec35a75a75ee71d0d72c71970c5cc8ecf2f7f5ec
 export const NAME = 'Thirsty Thirsty NFT'
 export const SYMBOL = 'TT'
 
-export const METADATA_BASE_URI = ''
+export const METADATA_BASE_URI = 'https://gateway.pinata.cloud/ipfs/QmbD8Dh1DrCautB8UBx7mVLYfcL8BtBAfkMpBJTGqn63nK'
