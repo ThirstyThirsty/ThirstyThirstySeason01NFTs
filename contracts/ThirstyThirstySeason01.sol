@@ -160,6 +160,10 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         _safeMint(_to, mintIndex);
     }
 
+    function withdraw(address _to) public onlyOwner {
+        //
+    }
+
     function nextTokenID() public view returns (uint256) {
         return nextTokenId.current();
     }
