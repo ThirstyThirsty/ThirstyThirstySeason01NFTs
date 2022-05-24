@@ -85,7 +85,7 @@ describe('ThirstyThirstySeason01', () => {
         .to.be.eventually.rejectedWith('URI query for nonexistent token')
     })
 
-    it.only("should return a token's full URI, matching the token's tier ID, with #tokenURI", async () => {
+    it("should return a token's full URI, matching the token's tier ID, with #tokenURI", async () => {
       await contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
       await contract.mint(TIER_TABLE_ID, { value: PRICE_TABLE })
       await expect(contract.tokenURI('1')).to.eventually.equal(`${baseURI}${TIER_CELLAR_ID}.json`)
@@ -107,6 +107,12 @@ describe('ThirstyThirstySeason01', () => {
       const notOwner = (await ethers.getSigners())[1]
       await expect(contract.connect(notOwner).setMerkleRoot('0x81cd02ab7e569e8bcd9317e2fe99f2de44d49ab2b8851ba4a308000000000000'))
         .to.be.rejectedWith('Ownable: caller is not the owner')
+    })
+
+    it('should fail if called when contract is paused', async () => {
+      await contract.pause()
+      await expect(contract.setMerkleRoot(ethers.utils.hexZeroPad('0x00', 32)))
+        .to.eventually.be.rejectedWith('Pausable: paused')
     })
   })
 
@@ -131,6 +137,12 @@ describe('ThirstyThirstySeason01', () => {
       const notOwner = (await ethers.getSigners())[1]
       await expect(contract.connect(notOwner).setMintStarted(true))
         .to.be.rejectedWith('Ownable: caller is not the owner')
+    })
+
+    it('should fail if called when contract is paused', async () => {
+      await contract.pause()
+      await expect(contract.setMintStarted(true))
+        .to.be.rejectedWith('Pausable: paused')
     })
   })
 
@@ -167,6 +179,12 @@ describe('ThirstyThirstySeason01', () => {
         .not.to.be.rejected
       const updatedAddr = (await contract.proxyRegistryAddress()).toLowerCase()
       expect(updatedAddr).to.equal(newAddr)
+    })
+
+    it('should fail if called when contract is paused', async () => {
+      await contract.pause()
+      await expect(contract.setProxyRegistryAddress(OS_PROXY_ADDR))
+        .to.be.rejectedWith('Pausable: paused')
     })
   })
 
@@ -212,6 +230,12 @@ describe('ThirstyThirstySeason01', () => {
         .to.not.be.eventually.rejected
       await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
         .to.be.eventually.rejectedWith('No more mint for user')
+    })
+
+    it('should fail if called when contract is paused', async () => {
+      await contract.pause()
+      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
+        .to.be.rejectedWith('Pausable: paused')
     })
 
     it('should mint a new token and increment next token ID', async () => {
@@ -275,6 +299,31 @@ describe('ThirstyThirstySeason01', () => {
             { value: PRICE_TABLE_GOLD }
           )
       ).to.be.eventually.rejectedWith('Address not in goldlist')
+    })
+
+    it('should fail if called when contract is paused', async () => {
+      const users = await ethers.getSigners()
+      const whitelistAddresses = [
+        users[1].address,
+        users[2].address,
+        users[5].address
+      ]
+      const merkleTree = generateMerkleTree(whitelistAddresses)
+      const merkleRoot = getMerkleRoot(merkleTree)
+
+      contract = await createAndDeploy(
+        'ThirstyThirsty', 'TT', baseURI, true, merkleRoot
+      )
+      await contract.pause()
+
+      await expect(
+        contract
+          .connect(users[1])
+          .mintGold(
+            merkleTree.getHexProof(keccak256(users[1].address)),
+            { value: PRICE_TABLE_GOLD }
+          )
+      ).to.be.rejectedWith('Pausable: paused')
     })
 
     it('should fail if user attempts to mint more than 6 tokens', async () => {
@@ -439,6 +488,14 @@ describe('ThirstyThirstySeason01', () => {
 
       await expect(contract.airdrop(recipient.address))
         .to.be.eventually.rejectedWith('Sold out')
+    })
+
+    it('should fail if called when contract is paused', async () => {
+      await contract.pause()
+
+      const recipient = (await ethers.getSigners())[1]
+      await expect(contract.airdrop(recipient.address))
+        .to.be.rejectedWith('Pausable: paused')
     })
 
     it('should mint a token to recipient wallet passed as argument', async () => {

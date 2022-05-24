@@ -109,7 +109,7 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         nextTokenId.increment();
     }
 
-    function mint(uint8 _tierId) public payable {
+    function mint(uint8 _tierId) public payable whenNotPaused {
         require(isMintStarted == true, "Not yet started");
         require((mintsPerUser[msg.sender] < 6), "No more mint for user");
         uint256 mintIndex = nextTokenId.current();
@@ -131,7 +131,7 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         _safeMint(msg.sender, mintIndex);
     }
 
-    function mintGold(bytes32[] calldata _merkleProof) public payable {
+    function mintGold(bytes32[] calldata _merkleProof) public payable whenNotPaused {
         require((mintsPerUser[msg.sender] < 6), "No more mint for user");
         require(merkleRoot != 0, "Merkle root not set");
         require(mintsPerUser[msg.sender] == 0, "Address has already claimed");
@@ -148,7 +148,7 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         _safeMint(msg.sender, mintIndex);
     }
 
-    function airdrop(address _to) public onlyOwner {
+    function airdrop(address _to) public onlyOwner whenNotPaused {
         require((mintsPerUser[_to] < 6), "No more mint for user");
         uint256 mintIndex = nextTokenId.current();
         require(tierFriends.minted < tierFriends.supply, "Sold out (airdrop)");
@@ -168,18 +168,6 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         return nextTokenId.current() - 1;
     }
 
-    function pause() public onlyOwner {
-        _pause();
-    }
-
-    function unpause() public onlyOwner {
-        _unpause();
-    }
-
-    function setMintStarted(bool _started) public onlyOwner {
-        isMintStarted = _started;
-    }
-
     function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
         require(_exists(_tokenId), "URI query for nonexistent token");
 
@@ -189,11 +177,23 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         return string(abi.encodePacked(super.tokenURI(tierId), ".json"));
     }
 
-    function setMerkleRoot(bytes32 _merkleRoot) public onlyOwner {
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    function unpause() public onlyOwner {
+        _unpause();
+    }
+
+    function setMintStarted(bool _started) public onlyOwner whenNotPaused {
+        isMintStarted = _started;
+    }
+
+    function setMerkleRoot(bytes32 _merkleRoot) public onlyOwner whenNotPaused {
         merkleRoot = _merkleRoot;
     }
 
-    function setProxyRegistryAddress(address _proxyRegistryAddress) external onlyOwner {
+    function setProxyRegistryAddress(address _proxyRegistryAddress) external onlyOwner whenNotPaused {
         proxyRegistryAddress = _proxyRegistryAddress;
     }
 
