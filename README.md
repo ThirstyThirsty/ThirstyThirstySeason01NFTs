@@ -124,6 +124,10 @@ Edit the `.env` file `RINKEBY_URL` variable with the relevant information to con
 npx hardhat run scripts/deploy.ts --network rinkeby
 ```
 
+## Withdraw smart contract funds
+
+After one or several mints, funds accumulated on the smart contract can be transfered to the contract's `owner` using the `withdraw()` method. It takes no argument and transfers all remaining funds to the message sender (which is the _de facto_ `owner`, as this method is activable by owner only).
+
 ## Contract addresses
 
 Here are the up-to-date contract addresses on various Ethereum networks.
