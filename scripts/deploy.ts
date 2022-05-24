@@ -69,7 +69,6 @@ async function main() {
 
   await contract.deployed()
 
-
   console.log("\n")
   console.log('`Thirsty Thirsty` contract deployed to:', contract.address)
   console.log("\n")

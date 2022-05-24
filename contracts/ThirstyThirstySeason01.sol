@@ -82,7 +82,7 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
     Tier private tierCellar;
     Tier private tierTable;
     Tier private tierTableGold;
-    Tier private tierFriends;
+    Tier private tierFrens;
 
     constructor(
         string memory _name,
@@ -93,14 +93,14 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         Tier memory _tierCellar,
         Tier memory _tierTable,
         Tier memory _tierTableGold,
-        Tier memory _tierFriends,
+        Tier memory _tierFrens,
         bytes32 _merkleRoot
     ) ERC721(_name, _symbol) {
         isMintStarted = _isMintStarted;
         tierCellar = _tierCellar;
         tierTable = _tierTable;
         tierTableGold = _tierTableGold;
-        tierFriends = _tierFriends;
+        tierFrens = _tierFrens;
 
         merkleRoot = _merkleRoot;
         proxyRegistryAddress = _proxyRegistryAddress;
@@ -151,13 +151,19 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
     function airdrop(address _to) public onlyOwner whenNotPaused {
         require((mintsPerUser[_to] < 6), "No more mint for user");
         uint256 mintIndex = nextTokenId.current();
-        require(tierFriends.minted < tierFriends.supply, "Sold out (airdrop)");
+        require(tierFrens.minted < tierFrens.supply, "Sold out (airdrop)");
 
         mintsPerUser[msg.sender] += 1;
-        tierFriends.minted += 1;
-        tokenIdToTierId[mintIndex] = tierFriends.id;
+        tierFrens.minted += 1;
+        tokenIdToTierId[mintIndex] = tierFrens.id;
         nextTokenId.increment();
         _safeMint(_to, mintIndex);
+    }
+
+    function withdraw() public onlyOwner {
+        uint256 balance = address(this).balance;
+        (bool success, ) = msg.sender.call{value: balance}("");
+        require(success, "Withdraw failed");
     }
 
     function nextTokenID() public view returns (uint256) {
