@@ -506,6 +506,26 @@ describe('ThirstyThirstySeason01', () => {
     })
   })
 
+  describe('#transferOwnership', () => {
+    it('should prevent non-owner to use #transferOwnership', async () => {
+      const notOwner = (await ethers.getSigners())[1]
+      const otherUser = (await ethers.getSigners())[2]
+      await expect(contract.connect(notOwner).transferOwnership(otherUser.address))
+        .to.be.eventually.rejectedWith('Ownable: caller is not the owner');
+    })
+
+    it('should transfer contract ownership to address passed as argument', async () => {
+      const owner = (await ethers.getSigners())[0]
+      const otherUser = (await ethers.getSigners())[2]
+      await expect(contract.owner()).to.eventually.equal(owner.address)
+
+      await expect(contract.transferOwnership(otherUser.address))
+        .to.eventually.be.fulfilled
+
+      await expect(contract.owner()).to.eventually.equal(otherUser.address)
+    })
+  })
+
   describe('#withdraw', () => {
     it('should prevent non-owner to use #withdraw', async () => {
       const notOwner = (await ethers.getSigners())[1]
