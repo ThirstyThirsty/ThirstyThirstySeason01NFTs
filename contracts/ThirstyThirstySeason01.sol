@@ -55,6 +55,8 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
      */
     address public proxyRegistryAddress;
 
+    mapping(uint64 => uint256) private mintsPerTiers;
+
     /**
      * @dev Count the current number of NFT minted by each user.
      */
@@ -74,7 +76,6 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
      */
     struct Tier {
         uint64 id;
-        uint64 minted;
         uint64 supply;
         uint256 priceInWei;
     }
@@ -121,11 +122,11 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         } else {
             tier = tierTable;
         }
-        require(tier.minted < tier.supply, "Sold out");
+        require(mintsPerTiers[_tierId] < tier.supply, "Sold out");
         require(msg.value >= tier.priceInWei, "Not enough fund");
 
         mintsPerUser[msg.sender] += 1;
-        tier.minted += 1;
+        mintsPerTiers[_tierId] += 1;
         tokenIdToTierId[mintIndex] = _tierId;
         nextTokenId.increment();
         _safeMint(msg.sender, mintIndex);
@@ -137,12 +138,12 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         require(mintsPerUser[msg.sender] == 0, "Address has already claimed");
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
         require(MerkleProof.verify(_merkleProof, merkleRoot, leaf), "Address not in goldlist");
-        require(tierTableGold.minted < tierTableGold.supply, "Sold out (goldlist)");
+        require(mintsPerTiers[tierTableGold.id] < tierTableGold.supply, "Sold out (goldlist)");
         require(msg.value >= tierTableGold.priceInWei, "Not enough fund");
 
         uint256 mintIndex = nextTokenId.current();
         mintsPerUser[msg.sender] += 1;
-        tierTableGold.minted += 1;
+        mintsPerTiers[tierTableGold.id] += 1;
         tokenIdToTierId[mintIndex] = tierTableGold.id;
         nextTokenId.increment();
         _safeMint(msg.sender, mintIndex);
@@ -151,10 +152,10 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
     function airdrop(address _to) public onlyOwner whenNotPaused {
         require((mintsPerUser[_to] < 6), "No more mint for user");
         uint256 mintIndex = nextTokenId.current();
-        require(tierFrens.minted < tierFrens.supply, "Sold out (airdrop)");
+        require(mintsPerTiers[tierFrens.id] < tierFrens.supply, "Sold out (airdrop)");
 
         mintsPerUser[msg.sender] += 1;
-        tierFrens.minted += 1;
+        mintsPerTiers[tierFrens.id] += 1;
         tokenIdToTierId[mintIndex] = tierFrens.id;
         nextTokenId.increment();
         _safeMint(_to, mintIndex);
