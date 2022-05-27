@@ -18,10 +18,10 @@ import { Tier } from '../utils/structs'
 
 use(asPromised)
 
-const tierCellar = { id: TIER_CELLAR_ID, minted: 0, supply: 270, priceInWei: PRICE_CELLAR }
-const tierTable = { id: TIER_TABLE_ID, minted: 0, supply: 518, priceInWei: PRICE_TABLE }
-const tierTableGold = { id: TIER_TABLE_GOLD_ID, minted: 0, supply: 100, priceInWei: PRICE_TABLE_GOLD }
-const tierFriends = { id: TIER_FRENS_ID, minted: 0, supply: 50, priceInWei: BigNumber.from(0) }
+const tierCellar = { id: TIER_CELLAR_ID, supply: 270, priceInWei: PRICE_CELLAR }
+const tierTable = { id: TIER_TABLE_ID, supply: 518, priceInWei: PRICE_TABLE }
+const tierTableGold = { id: TIER_TABLE_GOLD_ID, supply: 100, priceInWei: PRICE_TABLE_GOLD }
+const tierFriends = { id: TIER_FRENS_ID, supply: 50, priceInWei: BigNumber.from(0) }
 
 const createAndDeploy = async (
   name: string = 'Thirsty Thirsty',
@@ -90,6 +90,22 @@ describe('ThirstyThirstySeason01', () => {
       await contract.mint(TIER_TABLE_ID, { value: PRICE_TABLE })
       await expect(contract.tokenURI('1')).to.eventually.equal(`${baseURI}${TIER_CELLAR_ID}.json`)
       await expect(contract.tokenURI('2')).to.eventually.equal(`${baseURI}${TIER_TABLE_ID}.json`)
+    })
+
+    it('should return an array with all mints per tiers, ordered by their IDs, with #mintedPerTiers', async () => {
+      await contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
+      await contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
+      await contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
+      await contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
+      await contract.mint(TIER_TABLE_ID, { value: PRICE_TABLE })
+      await contract.mint(TIER_TABLE_ID, { value: PRICE_TABLE })
+
+      const mintedPerTiers = await contract.mintedPerTiers()
+
+      expect(mintedPerTiers[0]).to.equal(BigNumber.from(4))
+      expect(mintedPerTiers[1]).to.equal(BigNumber.from(2))
+      expect(mintedPerTiers[2]).to.equal(BigNumber.from(0))
+      expect(mintedPerTiers[3]).to.equal(BigNumber.from(0))
     })
   })
 

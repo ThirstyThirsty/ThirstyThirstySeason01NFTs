@@ -175,6 +175,11 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         return nextTokenId.current() - 1;
     }
 
+    function mintedPerTiers() public view returns (uint256[4] memory) {
+        uint256[4] memory mints = [mintsPerTiers[1], mintsPerTiers[2], mintsPerTiers[3], mintsPerTiers[4]];
+        return mints;
+    }
+
     function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
         require(_exists(_tokenId), "URI query for nonexistent token");
 
