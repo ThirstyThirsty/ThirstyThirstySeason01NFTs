@@ -392,31 +392,6 @@ describe('ThirstyThirstySeason01', () => {
           .connect(users[5])
           .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
         ).to.be.eventually.fulfilled
-      await expect(
-        contract
-          .connect(users[5])
-          .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
-        ).to.be.eventually.fulfilled
-      await expect(
-        contract
-          .connect(users[5])
-          .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
-        ).to.be.eventually.fulfilled
-      await expect(
-        contract
-          .connect(users[5])
-          .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
-        ).to.be.eventually.fulfilled
-      await expect(
-        contract
-          .connect(users[5])
-          .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
-        ).to.be.eventually.fulfilled
-      await expect(
-        contract
-          .connect(users[5])
-          .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
-        ).to.be.eventually.fulfilled
 
       await expect(
         contract
@@ -425,7 +400,7 @@ describe('ThirstyThirstySeason01', () => {
             merkleTree.getHexProof(keccak256(users[5].address)),
             { value: PRICE_TABLE_GOLD }
           )
-      ).to.be.eventually.rejectedWith('No more mint for user')
+      ).to.be.eventually.rejectedWith('Address has already claimed')
     })
 
     it('should fail minting if address has already minted', async () => {
