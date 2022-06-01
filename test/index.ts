@@ -14,7 +14,7 @@ import {
   TIER_TABLE_GOLD_ID,
   TIER_FRENS_ID
 } from '../utils/constants'
-import { Tier } from '../utils/structs'
+import { ThirstyThirstySeason01 } from '../typechain-types/contracts/ThirstyThirstySeason01.sol/ThirstyThirstySeason01'
 
 use(asPromised)
 
@@ -29,10 +29,10 @@ const createAndDeploy = async (
   baseURI: string = 'https://tt.dev/',
   isMintStarted: boolean = true,
   merkleRoot: BigNumberish = ethers.utils.hexZeroPad('0x00', 32),
-  tier1: Tier = tierCellar,
-  tier2: Tier = tierTable,
-  tier3: Tier = tierTableGold,
-  tier4: Tier = tierFriends
+  tier1: ThirstyThirstySeason01.TierStruct = tierCellar,
+  tier2: ThirstyThirstySeason01.TierStruct = tierTable,
+  tier3: ThirstyThirstySeason01.TierStruct = tierTableGold,
+  tier4: ThirstyThirstySeason01.TierStruct = tierFriends
 ): Promise<Contract> => {
   const Factory = await ethers.getContractFactory('ThirstyThirstySeason01')
   const contract = await Factory.deploy(
