@@ -134,6 +134,36 @@ describe('ThirstyThirstySeason01', () => {
     })
   })
 
+  describe('#setBaseURI', () => {
+    beforeEach(async () => {
+      contract = await createAndDeploy(
+        'Thirsty Thirsty',
+        'TT',
+        '',
+        false // isMintStarted => false
+      )
+    })
+
+    it('should update `metadataBaseURI` value using #setBaseURI', async () => {
+      await expect(contract.metadataBaseURI()).to.eventually.equal('')
+      const newVal = 'foo'
+      await contract.setBaseURI(newVal)
+      await expect(contract.metadataBaseURI()).to.eventually.equal(newVal)
+    })
+
+    it('prevents non-owner to #setMintStarted', async () => {
+      const notOwner = (await ethers.getSigners())[1]
+      await expect(contract.connect(notOwner).setBaseURI('foo'))
+        .to.be.rejectedWith('Ownable: caller is not the owner')
+    })
+
+    it('should fail if called when contract is paused', async () => {
+      await contract.pause()
+      await expect(contract.setBaseURI('foo'))
+        .to.be.rejectedWith('Pausable: paused')
+    })
+  })
+
   describe('#setMintStarted', () => {
     beforeEach(async () => {
       contract = await createAndDeploy(

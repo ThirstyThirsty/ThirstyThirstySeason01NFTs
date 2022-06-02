@@ -34,7 +34,7 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
     /**
      * @dev Base URI for metadata file.
      */
-    string private metadataBaseURI;
+    string public metadataBaseURI;
 
     /**
      * @dev Merkle tree root used to check if a given address is in the goldlist.
@@ -207,6 +207,10 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
 
     function setProxyRegistryAddress(address _proxyRegistryAddress) external onlyOwner whenNotPaused {
         proxyRegistryAddress = _proxyRegistryAddress;
+    }
+
+    function setBaseURI(string memory _uri) public onlyOwner whenNotPaused {
+        metadataBaseURI = _uri;
     }
 
     function isApprovedForAll(address _owner, address _operator) public view virtual override returns (bool) {
