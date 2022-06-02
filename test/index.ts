@@ -87,9 +87,11 @@ describe('ThirstyThirstySeason01', () => {
 
     it("should return a token's full URI, matching the token's tier ID, with #tokenURI", async () => {
       await contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
+      await contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
       await contract.mint(TIER_TABLE_ID, { value: PRICE_TABLE })
       await expect(contract.tokenURI('1')).to.eventually.equal(`${baseURI}${TIER_CELLAR_ID}.json`)
-      await expect(contract.tokenURI('2')).to.eventually.equal(`${baseURI}${TIER_TABLE_ID}.json`)
+      await expect(contract.tokenURI('2')).to.eventually.equal(`${baseURI}${TIER_CELLAR_ID}.json`)
+      await expect(contract.tokenURI('3')).to.eventually.equal(`${baseURI}${TIER_TABLE_ID}.json`)
     })
 
     it('should return an array with all mints per tiers, ordered by their IDs, with #mintedPerTiers', async () => {

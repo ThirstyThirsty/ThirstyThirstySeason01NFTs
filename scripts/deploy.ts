@@ -6,18 +6,18 @@
 import hre, { ethers } from 'hardhat';
 import {
   OS_PROXY_ADDR,
-  PRICE_CELLAR,
-  PRICE_TABLE,
-  PRICE_TABLE_GOLD,
-  TIER_CELLAR_ID,
-  TIER_TABLE_ID,
-  TIER_TABLE_GOLD_ID,
-  TIER_FRENS_ID,
   MERKLE_ROOT,
   NAME,
   SYMBOL,
   METADATA_BASE_URI
 } from '../utils/constants'
+
+import {
+  tierCellar,
+  tierTable,
+  tierTableGold,
+  tierFrens
+} from './tiers';
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -29,31 +29,6 @@ async function main() {
 
   const Factory = await ethers.getContractFactory('ThirstyThirstySeason01')
 
-  const tierCellar = {
-    id: TIER_CELLAR_ID,
-    minted: 0,
-    supply: 270,
-    priceInWei: PRICE_CELLAR
-  }
-  const tierTable = {
-    id: TIER_TABLE_ID,
-    minted: 0,
-    supply: 518,
-    priceInWei: PRICE_TABLE
-  }
-  const tierTableGold = {
-    id: TIER_TABLE_GOLD_ID,
-    minted: 0,
-    supply: 100,
-    priceInWei: PRICE_TABLE_GOLD
-  }
-  const tierFriends = {
-    id: TIER_FRENS_ID,
-    minted: 0,
-    supply: 50,
-    priceInWei: ethers.BigNumber.from(0)
-  }
-
   const contract = await Factory.deploy(
     NAME,
     SYMBOL,
@@ -63,7 +38,7 @@ async function main() {
     tierCellar,
     tierTable,
     tierTableGold,
-    tierFriends,
+    tierFrens,
     MERKLE_ROOT
   )
 
