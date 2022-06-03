@@ -14,7 +14,7 @@ import {
   TIER_TABLE_GOLD_ID,
   TIER_FRENS_ID
 } from '../utils/constants'
-import { Tier } from '../utils/structs'
+import { ThirstyThirstySeason01 } from '../typechain-types/contracts/ThirstyThirstySeason01.sol/ThirstyThirstySeason01'
 
 use(asPromised)
 
@@ -27,19 +27,17 @@ const createAndDeploy = async (
   name: string = 'Thirsty Thirsty',
   symbol: string = 'TT',
   baseURI: string = 'https://tt.dev/',
-  isMintStarted: boolean = true,
   merkleRoot: BigNumberish = ethers.utils.hexZeroPad('0x00', 32),
-  tier1: Tier = tierCellar,
-  tier2: Tier = tierTable,
-  tier3: Tier = tierTableGold,
-  tier4: Tier = tierFriends
+  tier1: ThirstyThirstySeason01.TierStruct = tierCellar,
+  tier2: ThirstyThirstySeason01.TierStruct = tierTable,
+  tier3: ThirstyThirstySeason01.TierStruct = tierTableGold,
+  tier4: ThirstyThirstySeason01.TierStruct = tierFriends
 ): Promise<Contract> => {
   const Factory = await ethers.getContractFactory('ThirstyThirstySeason01')
   const contract = await Factory.deploy(
     name,
     symbol,
     baseURI,
-    isMintStarted,
     OS_PROXY_ADDR,
     tier1,
     tier2,
@@ -76,7 +74,7 @@ describe('ThirstyThirstySeason01', () => {
 
     it('should return the number of minted items with #totalMinted', async () => {
       await expect(contract.totalMinted()).to.eventually.equal('0')
-      await contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
+      await contract.mintCellar({ value: PRICE_CELLAR })
       await expect(contract.totalMinted()).to.eventually.equal('1')
     })
 
@@ -86,21 +84,21 @@ describe('ThirstyThirstySeason01', () => {
     })
 
     it("should return a token's full URI, matching the token's tier ID, with #tokenURI", async () => {
-      await contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
-      await contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
-      await contract.mint(TIER_TABLE_ID, { value: PRICE_TABLE })
+      await contract.mintCellar({ value: PRICE_CELLAR })
+      await contract.mintCellar({ value: PRICE_CELLAR })
+      await contract.mintTable({ value: PRICE_TABLE })
       await expect(contract.tokenURI('1')).to.eventually.equal(`${baseURI}${TIER_CELLAR_ID}.json`)
       await expect(contract.tokenURI('2')).to.eventually.equal(`${baseURI}${TIER_CELLAR_ID}.json`)
       await expect(contract.tokenURI('3')).to.eventually.equal(`${baseURI}${TIER_TABLE_ID}.json`)
     })
 
     it('should return an array with all mints per tiers, ordered by their IDs, with #mintedPerTiers', async () => {
-      await contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
-      await contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
-      await contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
-      await contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
-      await contract.mint(TIER_TABLE_ID, { value: PRICE_TABLE })
-      await contract.mint(TIER_TABLE_ID, { value: PRICE_TABLE })
+      await contract.mintCellar({ value: PRICE_CELLAR })
+      await contract.mintCellar({ value: PRICE_CELLAR })
+      await contract.mintCellar({ value: PRICE_CELLAR })
+      await contract.mintCellar({ value: PRICE_CELLAR })
+      await contract.mintTable({ value: PRICE_TABLE })
+      await contract.mintTable({ value: PRICE_TABLE })
 
       const mintedPerTiers = await contract.mintedPerTiers()
 
@@ -139,8 +137,7 @@ describe('ThirstyThirstySeason01', () => {
       contract = await createAndDeploy(
         'Thirsty Thirsty',
         'TT',
-        '',
-        false // isMintStarted => false
+        ''
       )
     })
 
@@ -160,36 +157,6 @@ describe('ThirstyThirstySeason01', () => {
     it('should fail if called when contract is paused', async () => {
       await contract.pause()
       await expect(contract.setBaseURI('foo'))
-        .to.be.rejectedWith('Pausable: paused')
-    })
-  })
-
-  describe('#setMintStarted', () => {
-    beforeEach(async () => {
-      contract = await createAndDeploy(
-        'Thirsty Thirsty',
-        'TT',
-        'https://tt.dev/',
-        false // isMintStarted => false
-      )
-    })
-
-    it('should update the `isMintStarted` value using #setMintStarted', async () => {
-      let value = await contract.isMintStarted()
-      expect(value).to.equal(false)
-      await contract.setMintStarted(true)
-      await expect(contract.isMintStarted()).to.eventually.equal(true)
-    })
-
-    it('prevents non-owner to #setMintStarted', async () => {
-      const notOwner = (await ethers.getSigners())[1]
-      await expect(contract.connect(notOwner).setMintStarted(true))
-        .to.be.rejectedWith('Ownable: caller is not the owner')
-    })
-
-    it('should fail if called when contract is paused', async () => {
-      await contract.pause()
-      await expect(contract.setMintStarted(true))
         .to.be.rejectedWith('Pausable: paused')
     })
   })
@@ -235,58 +202,101 @@ describe('ThirstyThirstySeason01', () => {
     })
   })
 
-  describe('#mint', () => {
-    it('should fail if #isMintStarted is false', async () => {
-      contract = await createAndDeploy('ThirstyThirsty', 'TT', baseURI, false)
-      await expect(contract.isMintStarted()).to.eventually.be.false
-
-      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
-        .to.be.eventually.rejectedWith('Not yet started')
-    })
-
+  describe('#mintCellar', () => {
     it('should fail minting if not enough fund sent', async () => {
-      await expect(contract.mint(TIER_CELLAR_ID, { value: ethers.utils.parseEther('0.1') }))
+      await expect(contract.mintCellar({ value: ethers.utils.parseEther('0.1') }))
         .to.be.eventually.rejectedWith('Not enough fund')
     })
 
     it('should fail minting if address all available tokens have been minted', async () => {
       contract = await createAndDeploy(
-        'ThirstyThirsty', 'TT', baseURI, true,
+        'ThirstyThirsty', 'TT', baseURI,
         ethers.utils.hexZeroPad('0x00', 32),
         { ...tierCellar, supply: 0 }
       )
 
-      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
+      await expect(contract.mintCellar({ value: PRICE_CELLAR }))
         .to.be.eventually.rejectedWith('Sold out')
     })
 
     it('should fail if user attempts to mint more than 6 tokens', async () => {
       contract = await createAndDeploy()
 
-      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
+      await expect(contract.mintCellar({ value: PRICE_CELLAR }))
         .to.be.eventually.fulfilled
-      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
+      await expect(contract.mintCellar({ value: PRICE_CELLAR }))
         .to.be.eventually.fulfilled
-      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
+      await expect(contract.mintCellar({ value: PRICE_CELLAR }))
         .to.be.eventually.fulfilled
-      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
+      await expect(contract.mintCellar({ value: PRICE_CELLAR }))
         .to.be.eventually.fulfilled
-      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
+      await expect(contract.mintCellar({ value: PRICE_CELLAR }))
         .to.be.eventually.fulfilled
-      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
+      await expect(contract.mintCellar({ value: PRICE_CELLAR }))
         .to.be.eventually.fulfilled
-      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
+      await expect(contract.mintCellar({ value: PRICE_CELLAR }))
         .to.be.eventually.rejectedWith('No more mint for user')
     })
 
     it('should fail if called when contract is paused', async () => {
       await contract.pause()
-      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
+      await expect(contract.mintCellar({ value: PRICE_CELLAR }))
         .to.be.rejectedWith('Pausable: paused')
     })
 
     it('should mint a new token and increment next token ID', async () => {
-      await expect(contract.mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
+      await expect(contract.mintCellar({ value: PRICE_CELLAR }))
+        .to.be.eventually.fulfilled
+      await expect(contract.totalMinted()).to.eventually.equal('1')
+      await expect(contract.nextTokenID()).to.eventually.equal('2')
+    })
+  })
+
+  describe('#mintTable', () => {
+    it('should fail minting if not enough fund sent', async () => {
+      await expect(contract.mintTable({ value: ethers.utils.parseEther('0.1') }))
+        .to.be.eventually.rejectedWith('Not enough fund')
+    })
+
+    it('should fail minting if address all available tokens have been minted', async () => {
+      contract = await createAndDeploy(
+        'ThirstyThirsty', 'TT', baseURI,
+        ethers.utils.hexZeroPad('0x00', 32),
+        tierCellar,
+        { ...tierTable, supply: 0 }
+      )
+
+      await expect(contract.mintTable({ value: PRICE_TABLE }))
+        .to.be.eventually.rejectedWith('Sold out')
+    })
+
+    it('should fail if user attempts to mint more than 6 tokens', async () => {
+      contract = await createAndDeploy()
+
+      await expect(contract.mintTable({ value: PRICE_TABLE }))
+        .to.be.eventually.fulfilled
+      await expect(contract.mintTable({ value: PRICE_TABLE }))
+        .to.be.eventually.fulfilled
+      await expect(contract.mintTable({ value: PRICE_TABLE }))
+        .to.be.eventually.fulfilled
+      await expect(contract.mintTable({ value: PRICE_TABLE }))
+        .to.be.eventually.fulfilled
+      await expect(contract.mintTable({ value: PRICE_TABLE }))
+        .to.be.eventually.fulfilled
+      await expect(contract.mintTable({ value: PRICE_TABLE }))
+        .to.be.eventually.fulfilled
+      await expect(contract.mintTable({ value: PRICE_TABLE }))
+        .to.be.eventually.rejectedWith('No more mint for user')
+    })
+
+    it('should fail if called when contract is paused', async () => {
+      await contract.pause()
+      await expect(contract.mintTable({ value: PRICE_TABLE }))
+        .to.be.rejectedWith('Pausable: paused')
+    })
+
+    it('should mint a new token and increment next token ID', async () => {
+      await expect(contract.mintTable({ value: PRICE_TABLE }))
         .to.be.eventually.fulfilled
       await expect(contract.totalMinted()).to.eventually.equal('1')
       await expect(contract.nextTokenID()).to.eventually.equal('2')
@@ -305,7 +315,7 @@ describe('ThirstyThirstySeason01', () => {
       const merkleRoot = getMerkleRoot(merkleTree)
 
       contract = await createAndDeploy(
-        'ThirstyThirsty', 'TT', baseURI, true, merkleRoot
+        'ThirstyThirsty', 'TT', baseURI, merkleRoot
       )
 
       await expect(
@@ -359,7 +369,7 @@ describe('ThirstyThirstySeason01', () => {
       const merkleRoot = getMerkleRoot(merkleTree)
 
       contract = await createAndDeploy(
-        'ThirstyThirsty', 'TT', baseURI, true, merkleRoot
+        'ThirstyThirsty', 'TT', baseURI, merkleRoot
       )
       await contract.pause()
 
@@ -384,38 +394,13 @@ describe('ThirstyThirstySeason01', () => {
       const merkleRoot = getMerkleRoot(merkleTree)
 
       contract = await createAndDeploy(
-        'ThirstyThirsty', 'TT', baseURI, true, merkleRoot
+        'ThirstyThirsty', 'TT', baseURI, merkleRoot
       )
 
       await expect(
         contract
           .connect(users[5])
-          .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
-        ).to.be.eventually.fulfilled
-      await expect(
-        contract
-          .connect(users[5])
-          .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
-        ).to.be.eventually.fulfilled
-      await expect(
-        contract
-          .connect(users[5])
-          .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
-        ).to.be.eventually.fulfilled
-      await expect(
-        contract
-          .connect(users[5])
-          .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
-        ).to.be.eventually.fulfilled
-      await expect(
-        contract
-          .connect(users[5])
-          .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
-        ).to.be.eventually.fulfilled
-      await expect(
-        contract
-          .connect(users[5])
-          .mint(TIER_CELLAR_ID, { value: PRICE_CELLAR })
+          .mintCellar({ value: PRICE_CELLAR })
         ).to.be.eventually.fulfilled
 
       await expect(
@@ -425,7 +410,7 @@ describe('ThirstyThirstySeason01', () => {
             merkleTree.getHexProof(keccak256(users[5].address)),
             { value: PRICE_TABLE_GOLD }
           )
-      ).to.be.eventually.rejectedWith('No more mint for user')
+      ).to.be.eventually.rejectedWith('Address has already claimed')
     })
 
     it('should fail minting if address has already minted', async () => {
@@ -434,7 +419,7 @@ describe('ThirstyThirstySeason01', () => {
       const merkleRoot = getMerkleRoot(merkleTree)
 
       contract = await createAndDeploy(
-        'ThirstyThirsty', 'TT', baseURI, true, merkleRoot
+        'ThirstyThirsty', 'TT', baseURI, merkleRoot
       )
 
       await expect(
@@ -461,7 +446,7 @@ describe('ThirstyThirstySeason01', () => {
 
       contract = await createAndDeploy(
         'ThirstyThirsty', 'TT', baseURI,
-        true, merkleRoot, tierCellar, tierTable,
+        merkleRoot, tierCellar, tierTable,
         { ...tierTableGold, supply: 0 }
       )
 
@@ -480,7 +465,7 @@ describe('ThirstyThirstySeason01', () => {
       const merkleRoot = getMerkleRoot(merkleTree)
 
       contract = await createAndDeploy(
-        'ThirstyThirsty', 'TT', baseURI, true, merkleRoot
+        'ThirstyThirsty', 'TT', baseURI, merkleRoot
       )
 
       await expect(
@@ -506,17 +491,17 @@ describe('ThirstyThirstySeason01', () => {
 
     it('should revert if recipient wallet already owns 6 tokens', async () => {
       const recipient = (await ethers.getSigners())[1]
-      await expect(contract.connect(recipient).mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
+      await expect(contract.connect(recipient).mintCellar({ value: PRICE_CELLAR }))
         .to.be.eventually.fulfilled
-      await expect(contract.connect(recipient).mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
+      await expect(contract.connect(recipient).mintCellar({ value: PRICE_CELLAR }))
         .to.be.eventually.fulfilled
-      await expect(contract.connect(recipient).mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
+      await expect(contract.connect(recipient).mintCellar({ value: PRICE_CELLAR }))
         .to.be.eventually.fulfilled
-      await expect(contract.connect(recipient).mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
+      await expect(contract.connect(recipient).mintCellar({ value: PRICE_CELLAR }))
         .to.be.eventually.fulfilled
-      await expect(contract.connect(recipient).mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
+      await expect(contract.connect(recipient).mintCellar({ value: PRICE_CELLAR }))
         .to.be.eventually.fulfilled
-      await expect(contract.connect(recipient).mint(TIER_CELLAR_ID, { value: PRICE_CELLAR }))
+      await expect(contract.connect(recipient).mintCellar({ value: PRICE_CELLAR }))
         .to.be.eventually.fulfilled
 
       await expect(contract.airdrop(recipient.address))
@@ -527,7 +512,7 @@ describe('ThirstyThirstySeason01', () => {
       const recipient = (await ethers.getSigners())[1]
 
       contract = await createAndDeploy(
-        'ThirstyThirsty', 'TT', baseURI, true,
+        'ThirstyThirsty', 'TT', baseURI,
         ethers.utils.hexZeroPad('0x00', 32),
         tierCellar, tierTable, tierTableGold,
         { ...tierFriends, supply: 0 }
@@ -592,7 +577,7 @@ describe('ThirstyThirstySeason01', () => {
 
       const paid = ethers.utils.parseEther('5000')
 
-      await contract.connect(minter).mint(TIER_CELLAR_ID, { value: paid })
+      await contract.connect(minter).mintCellar({ value: paid })
       const newContractBalance = await ethers.provider.getBalance(contract.address)
       expect(newContractBalance).to.equal(paid)
 
