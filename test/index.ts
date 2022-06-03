@@ -5,7 +5,6 @@ import { generateMerkleTree, getMerkleRoot } from '../utils/goldlist'
 import keccak256 from 'keccak256'
 import asPromised from 'chai-as-promised'
 import {
-  OS_PROXY_ADDR,
   PRICE_CELLAR,
   PRICE_TABLE,
   PRICE_TABLE_GOLD,
@@ -15,6 +14,8 @@ import {
   TIER_FRENS_ID
 } from '../utils/constants'
 import { ThirstyThirstySeason01 } from '../typechain-types/contracts/ThirstyThirstySeason01.sol/ThirstyThirstySeason01'
+
+const OS_PROXY_ADDR = process.env.OS_PROXY_ADDR_RINKEBY ? process.env.OS_PROXY_ADDR_RINKEBY : '0x0';
 
 use(asPromised)
 
