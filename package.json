@@ -5,7 +5,12 @@
   },
   "scripts": {
     "compile": "hardhat compile",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "deploy:localhost": "hardhat run scripts/deploy.ts --network localhost",
+    "deploy:rinkeby": "hardhat run scripts/deploy.ts --network rinkeby",
+    "deploy:mainnet": "hardhat run scripts/deploy.ts --network mainnet",
+    "verify:rinkeby": "hardhat verify --network rinkeby --constructor-args ./scripts/arguments-rinkeby.ts",
+    "verify:mainnet": "hardhat verify --network mainnet --constructor-args ./scripts/arguments-mainnet.ts"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.5",

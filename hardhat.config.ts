@@ -39,15 +39,15 @@ const config: HardhatUserConfig = {
     hardhat: {
       chainId: 1337
     },
-    ropsten: {
-      url: process.env.ROPSTEN_URL || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-    },
     rinkeby: {
       url: process.env.RINKEBY_URL || "",
       accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+        process.env.PRIVATE_KEY_RINKEBY !== undefined ? [process.env.PRIVATE_KEY_RINKEBY] : [],
+    },
+    mainnet: {
+      url: process.env.MAINNET_URL || "",
+      accounts:
+        process.env.PRIVATE_KEY_MAINNET !== undefined ? [process.env.PRIVATE_KEY_MAINNET] : [],
     }
   },
   gasReporter: {

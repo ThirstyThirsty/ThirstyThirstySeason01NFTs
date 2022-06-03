@@ -1,6 +1,4 @@
 import {
-  OS_PROXY_ADDR,
-  MERKLE_ROOT,
   NAME,
   SYMBOL,
   METADATA_BASE_URI
@@ -11,13 +9,15 @@ import {
   tierTable,
   tierTableGold,
   tierFrens,
-} from './deploy';
+} from './tiers';
+
+const OS_PROXY_ADDR = process.env.OS_PROXY_ADDR_MAINNET;
+const MERKLE_ROOT = process.env.MERKLE_ROOT;
 
 module.exports = [
   NAME,
   SYMBOL,
   METADATA_BASE_URI,
-  false, // isMintStarted => false, so contract launches with goldlist minting only
   OS_PROXY_ADDR,
   tierCellar,
   tierTable,
