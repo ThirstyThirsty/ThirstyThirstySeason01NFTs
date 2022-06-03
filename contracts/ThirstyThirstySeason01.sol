@@ -1,5 +1,23 @@
 // SPDX-License-Identifier: MIT
 
+/*
+
+
+ooooooooooooo oooo         o8o                        .                    ooooooooooooo oooo         o8o                        .
+8'   888   `8 `888         `"'                      .o8                    8'   888   `8 `888         `"'                      .o8
+     888       888 .oo.   oooo  oooo d8b  .oooo.o .o888oo oooo    ooo           888       888 .oo.   oooo  oooo d8b  .oooo.o .o888oo oooo    ooo
+     888       888P"Y88b  `888  `888""8P d88(  "8   888    `88.  .8'            888       888P"Y88b  `888  `888""8P d88(  "8   888    `88.  .8'
+     888       888   888   888   888     `"Y88b.    888     `88..8'             888       888   888   888   888     `"Y88b.    888     `88..8'
+     888       888   888   888   888     o.  )88b   888 .    `888'              888       888   888   888   888     o.  )88b   888 .    `888'
+    o888o     o888o o888o o888o d888b    8""888P'   "888"     .8'              o888o     o888o o888o o888o d888b    8""888P'   "888"     .8'
+                                                          .o..P'                                                                     .o..P'
+                                                          `Y8P'                                                                      `Y8P'
+
+Celebrating ancestral agriculture through food, wine, & earth adventures.
+Let’s regenerate Mother Earth deliciously, together.
+
+*/
+
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/security/Pausable.sol";
