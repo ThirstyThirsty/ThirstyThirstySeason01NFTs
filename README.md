@@ -133,7 +133,7 @@ After one or several mints, funds accumulated on the smart contract can be trans
 Here are the up-to-date contract addresses on various Ethereum networks.
 
 ```
-- Rinkeby        TBD
+- Rinkeby        0x4f50d9980D2F429f36E4501EFC3A33DF38015b85
 - Mainnet        TBD
 ```
 

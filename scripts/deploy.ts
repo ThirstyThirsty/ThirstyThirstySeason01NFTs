@@ -5,8 +5,6 @@
 // Runtime Environment's members available in the global scope.
 import hre, { ethers } from 'hardhat';
 import {
-  OS_PROXY_ADDR,
-  MERKLE_ROOT,
   NAME,
   SYMBOL,
   METADATA_BASE_URI
@@ -18,6 +16,9 @@ import {
   tierTableGold,
   tierFrens
 } from './tiers';
+
+const OS_PROXY_ADDR = process.env.OS_PROXY_ADDR_RINKEBY;
+const MERKLE_ROOT = process.env.MERKLE_ROOT;
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -33,7 +34,6 @@ async function main() {
     NAME,
     SYMBOL,
     METADATA_BASE_URI,
-    false, // isMintStarted => false, so contract launches with goldlist minting only
     OS_PROXY_ADDR,
     tierCellar,
     tierTable,
