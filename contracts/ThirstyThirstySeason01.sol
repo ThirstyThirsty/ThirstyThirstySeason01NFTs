@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "hardhat/console.sol";
 
 contract OwnableDelegateProxy { }
 
@@ -55,7 +56,22 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
      */
     address public proxyRegistryAddress;
 
-    mapping(uint64 => uint256) private mintsPerTiers;
+    enum TierID {
+        CELLAR,
+        TABLE,
+        TABLE_GOLD,
+        FRENS
+    }
+
+    /**
+     * @dev Map Tier ID to the count of related NFTs minted.
+     */
+    mapping(TierID => uint256) private mintsPerTiers;
+
+    /**
+     * @dev Map ID of minted token to its Tier ID.
+     */
+    mapping(uint256 => TierID) private tokenIdToTierId;
 
     /**
      * @dev Count the current number of NFT minted by each user.
@@ -63,19 +79,14 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
     mapping(address => uint64) private mintsPerUser;
 
     /**
-     * @dev Map ID of minted token to its Tier ID.
-     */
-    mapping(uint256 => uint64) private tokenIdToTierId;
-
-    /**
-     * @dev TIER IDs | supply | price in wei | human-readable name
-     * 1 | 270 | 0.4 | Cellar
-     * 2 | 518 | 0.2 | Table
-     * 3 | 100 | 0.1 | Table (goldlist)
-     * 4 |  50 | 0   | Friends & Fam
+     * @dev TIER IDs   | SUPPLY | PRICE (WEI)
+     *      CELLAR     | 270    | 0.4
+     *      TABLE      | 518    | 0.2
+     *      TABLE_GOLD | 100    | 0.1
+     *      FRENS      |  50    | 0
      */
     struct Tier {
-        uint64 id;
+        TierID id;
         uint64 supply;
         uint256 priceInWei;
     }
@@ -110,52 +121,46 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         nextTokenId.increment();
     }
 
-    function mint(uint8 _tierId) public payable whenNotPaused {
+    function mintCellar() public payable whenNotPaused {
         require(isMintStarted == true, "Not yet started");
         require((mintsPerUser[msg.sender] < 6), "No more mint for user");
-        uint256 mintIndex = nextTokenId.current();
-        require(_tierId == tierCellar.id || _tierId == tierTable.id, "Unknown tier");
+        _mintCellar();
+    }
 
-        Tier memory tier;
-        if (_tierId == 1) {
-            tier = tierCellar;
-        } else {
-            tier = tierTable;
-        }
-        require(mintsPerTiers[_tierId] < tier.supply, "Sold out");
-        require(msg.value >= tier.priceInWei, "Not enough fund");
-
-        mintsPerUser[msg.sender] += 1;
-        mintsPerTiers[_tierId] += 1;
-        tokenIdToTierId[mintIndex] = _tierId;
-        nextTokenId.increment();
-        _safeMint(msg.sender, mintIndex);
+    function mintTable() public payable whenNotPaused {
+        require(isMintStarted == true, "Not yet started");
+        require((mintsPerUser[msg.sender] < 6), "No more mint for user");
+        _mintTable();
     }
 
     function mintGold(bytes32[] calldata _merkleProof) public payable whenNotPaused {
         require(mintsPerUser[msg.sender] == 0, "Address has already claimed");
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
         require(MerkleProof.verify(_merkleProof, merkleRoot, leaf), "Address not in goldlist");
-        require(mintsPerTiers[tierTableGold.id] < tierTableGold.supply, "Sold out (goldlist)");
+        require(mintsPerTiers[TierID.TABLE_GOLD] < tierTableGold.supply, "Sold out (goldlist)");
         require(msg.value >= tierTableGold.priceInWei, "Not enough fund");
 
         uint256 mintIndex = nextTokenId.current();
+
         mintsPerUser[msg.sender] += 1;
-        mintsPerTiers[tierTableGold.id] += 1;
-        tokenIdToTierId[mintIndex] = tierTableGold.id;
+        mintsPerTiers[TierID.TABLE_GOLD] += 1;
+        tokenIdToTierId[mintIndex] = TierID.TABLE_GOLD;
         nextTokenId.increment();
+
         _safeMint(msg.sender, mintIndex);
     }
 
     function airdrop(address _to) public onlyOwner whenNotPaused {
         require((mintsPerUser[_to] < 6), "No more mint for user");
+        require(mintsPerTiers[TierID.FRENS] < tierFrens.supply, "Sold out (airdrop)");
+
         uint256 mintIndex = nextTokenId.current();
-        require(mintsPerTiers[tierFrens.id] < tierFrens.supply, "Sold out (airdrop)");
 
         mintsPerUser[msg.sender] += 1;
-        mintsPerTiers[tierFrens.id] += 1;
-        tokenIdToTierId[mintIndex] = tierFrens.id;
+        mintsPerTiers[TierID.FRENS] += 1;
+        tokenIdToTierId[mintIndex] = TierID.FRENS;
         nextTokenId.increment();
+
         _safeMint(_to, mintIndex);
     }
 
@@ -174,7 +179,12 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
     }
 
     function mintedPerTiers() public view returns (uint256[4] memory) {
-        uint256[4] memory mints = [mintsPerTiers[1], mintsPerTiers[2], mintsPerTiers[3], mintsPerTiers[4]];
+        uint256[4] memory mints = [
+            mintsPerTiers[TierID.CELLAR],
+            mintsPerTiers[TierID.TABLE],
+            mintsPerTiers[TierID.TABLE_GOLD],
+            mintsPerTiers[TierID.FRENS]
+        ];
         return mints;
     }
 
@@ -183,8 +193,10 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
 
         // Fetch tokenURI based on the tier ID.
         // Four metadata files exist -- one per tier.
-        uint64 tierId = tokenIdToTierId[_tokenId];
-        return string(abi.encodePacked(super.tokenURI(tierId), ".json"));
+        TierID tierId = tokenIdToTierId[_tokenId];
+        uint256 uintTierId = uint256(tierId);
+        string memory stringTierId = Strings.toString(uintTierId);
+        return string(abi.encodePacked(metadataBaseURI, stringTierId, ".json"));
     }
 
     function pause() public onlyOwner {
@@ -220,6 +232,34 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
             }
         }
         return super.isApprovedForAll(_owner, _operator);
+    }
+
+    function _mintCellar() internal {
+        require(mintsPerTiers[TierID.CELLAR] < tierCellar.supply, "Sold out");
+        require(msg.value >= tierCellar.priceInWei, "Not enough fund");
+
+        uint256 mintIndex = nextTokenId.current();
+
+        mintsPerUser[msg.sender] += 1;
+        mintsPerTiers[TierID.CELLAR] += 1;
+        tokenIdToTierId[mintIndex] = TierID.CELLAR;
+        nextTokenId.increment();
+
+        _safeMint(msg.sender, mintIndex);
+    }
+
+    function _mintTable() internal {
+        require(mintsPerTiers[TierID.TABLE] < tierTable.supply, "Sold out");
+        require(msg.value >= tierTable.priceInWei, "Not enough fund");
+
+        uint256 mintIndex = nextTokenId.current();
+
+        mintsPerUser[msg.sender] += 1;
+        mintsPerTiers[TierID.TABLE] += 1;
+        tokenIdToTierId[mintIndex] = TierID.TABLE;
+        nextTokenId.increment();
+
+        _safeMint(msg.sender, mintIndex);
     }
 
     function _baseURI() internal view virtual override returns (string memory) {

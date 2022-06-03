@@ -2,10 +2,10 @@ import { ethers } from 'hardhat'
 
 export const OS_PROXY_ADDR = '0xf57b2c51ded3a29e6891aba85459d600256cf317' // Rinkeby
 
-export const TIER_CELLAR_ID = 1
-export const TIER_TABLE_ID = 2
-export const TIER_TABLE_GOLD_ID = 3
-export const TIER_FRENS_ID = 4
+export const TIER_CELLAR_ID = 0
+export const TIER_TABLE_ID = 1
+export const TIER_TABLE_GOLD_ID = 2
+export const TIER_FRENS_ID = 3
 
 export const PRICE_CELLAR = ethers.utils.parseEther('0.4')
 export const PRICE_TABLE = ethers.utils.parseEther('0.2')
