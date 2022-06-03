@@ -27,7 +27,6 @@ const createAndDeploy = async (
   name: string = 'Thirsty Thirsty',
   symbol: string = 'TT',
   baseURI: string = 'https://tt.dev/',
-  isMintStarted: boolean = true,
   merkleRoot: BigNumberish = ethers.utils.hexZeroPad('0x00', 32),
   tier1: ThirstyThirstySeason01.TierStruct = tierCellar,
   tier2: ThirstyThirstySeason01.TierStruct = tierTable,
@@ -39,7 +38,6 @@ const createAndDeploy = async (
     name,
     symbol,
     baseURI,
-    isMintStarted,
     OS_PROXY_ADDR,
     tier1,
     tier2,
@@ -139,8 +137,7 @@ describe('ThirstyThirstySeason01', () => {
       contract = await createAndDeploy(
         'Thirsty Thirsty',
         'TT',
-        '',
-        false // isMintStarted => false
+        ''
       )
     })
 
@@ -160,36 +157,6 @@ describe('ThirstyThirstySeason01', () => {
     it('should fail if called when contract is paused', async () => {
       await contract.pause()
       await expect(contract.setBaseURI('foo'))
-        .to.be.rejectedWith('Pausable: paused')
-    })
-  })
-
-  describe('#setMintStarted', () => {
-    beforeEach(async () => {
-      contract = await createAndDeploy(
-        'Thirsty Thirsty',
-        'TT',
-        'https://tt.dev/',
-        false // isMintStarted => false
-      )
-    })
-
-    it('should update the `isMintStarted` value using #setMintStarted', async () => {
-      let value = await contract.isMintStarted()
-      expect(value).to.equal(false)
-      await contract.setMintStarted(true)
-      await expect(contract.isMintStarted()).to.eventually.equal(true)
-    })
-
-    it('prevents non-owner to #setMintStarted', async () => {
-      const notOwner = (await ethers.getSigners())[1]
-      await expect(contract.connect(notOwner).setMintStarted(true))
-        .to.be.rejectedWith('Ownable: caller is not the owner')
-    })
-
-    it('should fail if called when contract is paused', async () => {
-      await contract.pause()
-      await expect(contract.setMintStarted(true))
         .to.be.rejectedWith('Pausable: paused')
     })
   })
@@ -236,14 +203,6 @@ describe('ThirstyThirstySeason01', () => {
   })
 
   describe('#mintCellar', () => {
-    it('should fail if #isMintStarted is false', async () => {
-      contract = await createAndDeploy('ThirstyThirsty', 'TT', baseURI, false)
-      await expect(contract.isMintStarted()).to.eventually.be.false
-
-      await expect(contract.mintCellar({ value: PRICE_CELLAR }))
-        .to.be.eventually.rejectedWith('Not yet started')
-    })
-
     it('should fail minting if not enough fund sent', async () => {
       await expect(contract.mintCellar({ value: ethers.utils.parseEther('0.1') }))
         .to.be.eventually.rejectedWith('Not enough fund')
@@ -251,7 +210,7 @@ describe('ThirstyThirstySeason01', () => {
 
     it('should fail minting if address all available tokens have been minted', async () => {
       contract = await createAndDeploy(
-        'ThirstyThirsty', 'TT', baseURI, true,
+        'ThirstyThirsty', 'TT', baseURI,
         ethers.utils.hexZeroPad('0x00', 32),
         { ...tierCellar, supply: 0 }
       )
@@ -294,14 +253,6 @@ describe('ThirstyThirstySeason01', () => {
   })
 
   describe('#mintTable', () => {
-    it('should fail if #isMintStarted is false', async () => {
-      contract = await createAndDeploy('ThirstyThirsty', 'TT', baseURI, false)
-      await expect(contract.isMintStarted()).to.eventually.be.false
-
-      await expect(contract.mintTable({ value: PRICE_TABLE }))
-        .to.be.eventually.rejectedWith('Not yet started')
-    })
-
     it('should fail minting if not enough fund sent', async () => {
       await expect(contract.mintTable({ value: ethers.utils.parseEther('0.1') }))
         .to.be.eventually.rejectedWith('Not enough fund')
@@ -309,7 +260,7 @@ describe('ThirstyThirstySeason01', () => {
 
     it('should fail minting if address all available tokens have been minted', async () => {
       contract = await createAndDeploy(
-        'ThirstyThirsty', 'TT', baseURI, true,
+        'ThirstyThirsty', 'TT', baseURI,
         ethers.utils.hexZeroPad('0x00', 32),
         tierCellar,
         { ...tierTable, supply: 0 }
@@ -364,7 +315,7 @@ describe('ThirstyThirstySeason01', () => {
       const merkleRoot = getMerkleRoot(merkleTree)
 
       contract = await createAndDeploy(
-        'ThirstyThirsty', 'TT', baseURI, true, merkleRoot
+        'ThirstyThirsty', 'TT', baseURI, merkleRoot
       )
 
       await expect(
@@ -418,7 +369,7 @@ describe('ThirstyThirstySeason01', () => {
       const merkleRoot = getMerkleRoot(merkleTree)
 
       contract = await createAndDeploy(
-        'ThirstyThirsty', 'TT', baseURI, true, merkleRoot
+        'ThirstyThirsty', 'TT', baseURI, merkleRoot
       )
       await contract.pause()
 
@@ -443,7 +394,7 @@ describe('ThirstyThirstySeason01', () => {
       const merkleRoot = getMerkleRoot(merkleTree)
 
       contract = await createAndDeploy(
-        'ThirstyThirsty', 'TT', baseURI, true, merkleRoot
+        'ThirstyThirsty', 'TT', baseURI, merkleRoot
       )
 
       await expect(
@@ -468,7 +419,7 @@ describe('ThirstyThirstySeason01', () => {
       const merkleRoot = getMerkleRoot(merkleTree)
 
       contract = await createAndDeploy(
-        'ThirstyThirsty', 'TT', baseURI, true, merkleRoot
+        'ThirstyThirsty', 'TT', baseURI, merkleRoot
       )
 
       await expect(
@@ -495,7 +446,7 @@ describe('ThirstyThirstySeason01', () => {
 
       contract = await createAndDeploy(
         'ThirstyThirsty', 'TT', baseURI,
-        true, merkleRoot, tierCellar, tierTable,
+        merkleRoot, tierCellar, tierTable,
         { ...tierTableGold, supply: 0 }
       )
 
@@ -514,7 +465,7 @@ describe('ThirstyThirstySeason01', () => {
       const merkleRoot = getMerkleRoot(merkleTree)
 
       contract = await createAndDeploy(
-        'ThirstyThirsty', 'TT', baseURI, true, merkleRoot
+        'ThirstyThirsty', 'TT', baseURI, merkleRoot
       )
 
       await expect(
@@ -561,7 +512,7 @@ describe('ThirstyThirstySeason01', () => {
       const recipient = (await ethers.getSigners())[1]
 
       contract = await createAndDeploy(
-        'ThirstyThirsty', 'TT', baseURI, true,
+        'ThirstyThirsty', 'TT', baseURI,
         ethers.utils.hexZeroPad('0x00', 32),
         tierCellar, tierTable, tierTableGold,
         { ...tierFriends, supply: 0 }

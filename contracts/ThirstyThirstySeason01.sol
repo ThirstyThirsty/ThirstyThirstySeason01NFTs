@@ -40,13 +40,6 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
      * @dev Merkle tree root used to check if a given address is in the goldlist.
      */
     bytes32 public merkleRoot;
-
-    /**
-     * @dev Must be true for regular mints to be allowed.
-     * Goldlist mints can be done no matter what this value is.
-     */
-    bool public isMintStarted;
-
     /**
      * @dev OpenSea proxy to remove listing fees on their site.
      * https://etherscan.io/accounts/label/opensea
@@ -99,7 +92,6 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         string memory _name,
         string memory _symbol,
         string memory _metadataURI,
-        bool _isMintStarted,
         address _proxyRegistryAddress,
         Tier memory _tierCellar,
         Tier memory _tierTable,
@@ -107,12 +99,10 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         Tier memory _tierFrens,
         bytes32 _merkleRoot
     ) ERC721(_name, _symbol) {
-        isMintStarted = _isMintStarted;
         tierCellar = _tierCellar;
         tierTable = _tierTable;
         tierTableGold = _tierTableGold;
         tierFrens = _tierFrens;
-
         merkleRoot = _merkleRoot;
         proxyRegistryAddress = _proxyRegistryAddress;
         metadataBaseURI = _metadataURI;
@@ -121,13 +111,11 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
     }
 
     function mintCellar() public payable whenNotPaused {
-        require(isMintStarted == true, "Not yet started");
         require((mintsPerUser[msg.sender] < 6), "No more mint for user");
         _mintCellar();
     }
 
     function mintTable() public payable whenNotPaused {
-        require(isMintStarted == true, "Not yet started");
         require((mintsPerUser[msg.sender] < 6), "No more mint for user");
         _mintTable();
     }
@@ -204,10 +192,6 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
 
     function unpause() public onlyOwner {
         _unpause();
-    }
-
-    function setMintStarted(bool _started) public onlyOwner whenNotPaused {
-        isMintStarted = _started;
     }
 
     function setMerkleRoot(bytes32 _merkleRoot) public onlyOwner whenNotPaused {
