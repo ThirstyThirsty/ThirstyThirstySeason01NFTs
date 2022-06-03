@@ -71,7 +71,7 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
     mapping(address => uint64) private mintsPerUser;
 
     /**
-     * @dev TIER IDs   | SUPPLY | PRICE (WEI)
+     * @dev TIER IDs   | SUPPLY | PRICE (ETH)
      *      CELLAR     | 270    | 0.4
      *      TABLE      | 518    | 0.2
      *      TABLE_GOLD | 100    | 0.1
