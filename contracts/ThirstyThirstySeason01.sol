@@ -27,6 +27,9 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "./@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
+import "./@rarible/royalties/contracts/LibPart.sol";
+import "./@rarible/royalties/contracts/LibRoyaltiesV2.sol";
 
 contract OwnableDelegateProxy { }
 
@@ -34,7 +37,7 @@ contract OpenSeaProxyRegistry {
     mapping(address => OwnableDelegateProxy) public proxies;
 }
 
-contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
+contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable, RoyaltiesV2Impl {
 
     using Strings for uint256;
     using Counters for Counters.Counter;
@@ -224,6 +227,23 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
         metadataBaseURI = _uri;
     }
 
+    /**
+     * @dev Implementation of Rarible royalty scheme in the two methods below.
+     *      Please not that the bulk of the methods is passed to a internal `_setRoyalties`
+     *      method so that royalties can be set automatically upon each mint (calling the public method below
+     *      would revert because of the `onlyOwner` modifier.
+     */
+    function setRoyalties(uint _tokenId, address payable _royaltiesRecipientAddress, uint96 _percentageBasisPoints) public onlyOwner {
+        _setRoyalties(_tokenId, _royaltiesRecipientAddress, _percentageBasisPoints);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721) returns (bool) {
+        if(interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES) {
+            return true;
+        }
+        return super.supportsInterface(interfaceId);
+    }
+
     function isApprovedForAll(address _owner, address _operator) public view virtual override returns (bool) {
         // Whitelist OpenSea proxy contract gas-free listing.
         if (proxyRegistryAddress != address(0)) {
@@ -233,6 +253,21 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable {
             }
         }
         return super.isApprovedForAll(_owner, _operator);
+    }
+
+    function _setRoyalties(uint _tokenId, address payable _royaltiesRecipientAddress, uint96 _percentageBasisPoints) internal {
+        LibPart.Part[] memory _royalties = new LibPart.Part[](1);
+        _royalties[0].value = _percentageBasisPoints;
+        _royalties[0].account = _royaltiesRecipientAddress;
+        _saveRoyalties(_tokenId, _royalties);
+    }
+
+    /**
+     * @dev Override _safeMint to automatically set 20% royalties on newly minted NFT for Rarible.
+     */
+    function _safeMint(address to, uint256 tokenId) internal override {
+        super._safeMint(to, tokenId);
+        _setRoyalties(tokenId, payable(owner()), 2000);
     }
 
     function _mintCellar() internal {
