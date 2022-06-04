@@ -595,4 +595,31 @@ describe('ThirstyThirstySeason01', () => {
         )
     })
   })
+
+  describe('Royalties', () => {
+    it('ensures each mint has set a 20% royalties to owner in Rarible', async () => {
+      const owner = (await ethers.getSigners())[0]
+      await contract.mintCellar({ value: PRICE_CELLAR })
+      const tokenId = 1
+      const [raribleRoyalties] = await contract.getRaribleV2Royalties(tokenId)
+      const { account, value } = raribleRoyalties
+
+      expect(account).to.equal(owner.address)
+      expect(+value.toString()).to.equal(20 * 100)
+    })
+
+    it('returns ERC2981-compatible royalties info stating owner receives 20% of the sell price with #royaltyInfo', async () => {
+      const owner = (await ethers.getSigners())[0]
+      await contract.mintCellar({ value: PRICE_CELLAR })
+      const tokenId = 1
+
+      const { receiver, royaltyAmount } = await contract.royaltyInfo(tokenId, PRICE_CELLAR)
+      expect(receiver).to.equal(owner.address)
+
+      const sellPrice = ethers.utils.formatEther(PRICE_CELLAR.toString())
+      const royalties = ethers.utils.formatEther(royaltyAmount.toString())
+      const royaltiesPercentage = (+royalties / +sellPrice) * 100
+      expect(royaltiesPercentage).to.equal(20)
+    })
+  })
 })
