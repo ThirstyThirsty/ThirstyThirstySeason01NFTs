@@ -92,6 +92,11 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable, RoyaltiesV2Impl {
     mapping(address => uint64) private mintsPerUser;
 
     /**
+     * @dev Support for ERC2981 (NFT Royalties Standard) interface.
+     */
+    bytes4 private constant _INTERFACE_ID_ERC2981 = 0x2a55205a;
+
+    /**
      * @dev TIER IDs   | SUPPLY | PRICE (ETH)
      *      CELLAR     | 270    | 0.4
      *      TABLE      | 418    | 0.2
@@ -237,8 +242,22 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable, RoyaltiesV2Impl {
         _setRoyalties(_tokenId, _royaltiesRecipientAddress, _percentageBasisPoints);
     }
 
+    /**
+     * @dev ERC2981 Royalty Standard
+     */
+    function royaltyInfo(uint256 _tokenId, uint256 _salePrice) external view returns (address receiver, uint256 royaltyAmount) {
+        LibPart.Part[] memory _royalties = royalties[_tokenId];
+        if(_royalties.length > 0) {
+            return (_royalties[0].account, (_salePrice * _royalties[0].value)/10000);
+        }
+        return (address(0), 0);
+    }
+
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721) returns (bool) {
-        if(interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES) {
+        if (interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES) {
+            return true;
+        }
+        if (interfaceId == _INTERFACE_ID_ERC2981) {
             return true;
         }
         return super.supportsInterface(interfaceId);

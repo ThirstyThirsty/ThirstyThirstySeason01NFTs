@@ -164,7 +164,7 @@ Secondary sales are handled by platforms directly.
 
 [OpenSea](https://opensea.io/) will send the funds to the `owner` after platforms fees.
 
-The smart contract implements [Rarible](https://rarible.com)'s royalties specifications to set a **20%** royalty split for the `owner`, as well as the [ERC-2981 NFT Royalties Standard](https://eips.ethereum.org/EIPS/eip-2981). The latter informs [Mintable](https://mintable.app) that **20%** of the resale is sent to the owner and hopefully, as the spec becomes enforced by more and more platforms, it makes the royalties management for this contract future-proof.
+The smart contract implements [Rarible](https://rarible.com)'s royalties specifications to set a **20%** royalty split for the `owner`, as well as the [ERC2981 NFT Royalties Standard](https://eips.ethereum.org/EIPS/eip-2981). The latter informs [Mintable](https://mintable.app) that **20%** of the resale is sent to the owner and hopefully, as the spec becomes enforced by more and more platforms, it makes the royalties management for this contract future-proof.
 
 ## Contract addresses
 
