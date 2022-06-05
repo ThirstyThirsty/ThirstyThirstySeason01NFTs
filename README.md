@@ -171,7 +171,7 @@ The smart contract implements [Rarible](https://rarible.com)'s royalties specifi
 Here are the up-to-date contract addresses on various Ethereum networks.
 
 ```
-- Rinkeby        0x4f50d9980D2F429f36E4501EFC3A33DF38015b85
+- Rinkeby        0x4413Ce6eed4e5C5a79D4a4547d3EB353F449dFc1
 - Mainnet        TBD
 ```
 
