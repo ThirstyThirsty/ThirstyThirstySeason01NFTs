@@ -192,13 +192,12 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable, RoyaltiesV2Impl {
     }
 
     function mintedPerTiers() public view returns (uint256[4] memory) {
-        uint256[4] memory mints = [
+        return [
             mintsPerTiers[TierID.CELLAR],
             mintsPerTiers[TierID.TABLE],
             mintsPerTiers[TierID.TABLE_GOLD],
             mintsPerTiers[TierID.FRENS]
         ];
-        return mints;
     }
 
     function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
