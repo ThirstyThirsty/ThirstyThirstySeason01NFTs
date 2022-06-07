@@ -99,8 +99,8 @@ contract ThirstyThirstySeason01 is ERC721, Ownable, Pausable, RoyaltiesV2Impl {
     /**
      * @dev TIER IDs   | SUPPLY | PRICE (ETH)
      *      CELLAR     | 270    | 0.4
-     *      TABLE      | 418    | 0.2
-     *      TABLE_GOLD | 100    | 0.1
+     *      TABLE      | 518    | 0.2
+     *      TABLE_GOLD |  50    | 0.1
      *      FRENS      |  50    | 0
      */
     struct Tier {
