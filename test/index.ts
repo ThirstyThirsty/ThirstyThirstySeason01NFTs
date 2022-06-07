@@ -20,8 +20,8 @@ const OS_PROXY_ADDR = process.env.OS_PROXY_ADDR_RINKEBY ? process.env.OS_PROXY_A
 use(asPromised)
 
 const tierCellar = { id: TIER_CELLAR_ID, supply: 270, priceInWei: PRICE_CELLAR }
-const tierTable = { id: TIER_TABLE_ID, supply: 518, priceInWei: PRICE_TABLE }
-const tierTableGold = { id: TIER_TABLE_GOLD_ID, supply: 100, priceInWei: PRICE_TABLE_GOLD }
+const tierTable = { id: TIER_TABLE_ID, supply: 618, priceInWei: PRICE_TABLE }
+const tierTableGold = { id: TIER_TABLE_GOLD_ID, supply: 50, priceInWei: PRICE_TABLE_GOLD }
 const tierFriends = { id: TIER_FRENS_ID, supply: 50, priceInWei: BigNumber.from(0) }
 
 const createAndDeploy = async (
