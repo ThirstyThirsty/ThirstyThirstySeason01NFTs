@@ -7,7 +7,7 @@
     "compile": "hardhat compile",
     "dev": "hardhat node",
     "test": "hardhat test",
-    "goldlist": "npm run scripts/merkle-root.ts",
+    "goldlist": "hardhat run scripts/merkle-root.ts",
     "deploy:localhost": "hardhat run scripts/deploy.ts --network localhost",
     "deploy:rinkeby": "hardhat run scripts/deploy.ts --network rinkeby",
     "deploy:mainnet": "hardhat run scripts/deploy.ts --network mainnet",
