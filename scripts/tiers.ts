@@ -17,12 +17,12 @@ export const tierCellar = {
 }
 export const tierTable = {
   id: TIER_TABLE_ID,
-  supply: 418,
+  supply: 518,
   priceInWei: PRICE_TABLE
 }
 export const tierTableGold = {
   id: TIER_TABLE_GOLD_ID,
-  supply: 100,
+  supply: 50,
   priceInWei: PRICE_TABLE_GOLD
 }
 export const tierFrens = {

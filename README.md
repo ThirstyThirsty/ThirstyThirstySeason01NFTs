@@ -18,17 +18,17 @@ npm install # or yarn install
 
 #### Dispatch
 
-There are 3 mintable NFT types — 3 tiers — with different pricing.
+There are 2 tiers of NFT, split in 4 types of different pricing.
 
-- **Tier 1 “Cellar”** - `270 units at 0.4 ETH`
+- **Tier 1 “Cellar” (Type 1)** - `270 units at 0.4 ETH`
 
-- **Tier 2 “Table”** - `518 units`, including:
+- **Tier 2 “Table”  (Type 2, 3, 4)** - `618 units`, including:
 
-  - Regular `418 units at 0.2 ETH`
+  - **Type 2** Regular `518 units at 0.2 ETH`
 
-  - Goldlist for our Discord members - `100 at 0.1 ETH`
+  - **Type 3** Goldlist for our Discord members - `50 at 0.1 ETH`
 
-- **Tier 3 “Frens & Fam”** - `50 units, free (airdropped)`
+  - **Type 4** "Frens & Fam", airdropped to collaborators - `50 at 0.1 ETH`
 
 #### Goldlist?
 
