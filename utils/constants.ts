@@ -12,4 +12,4 @@ export const PRICE_TABLE_GOLD = ethers.utils.parseEther('0.1')
 export const NAME = 'Thirsty Thirsty'
 export const SYMBOL = 'TT'
 
-export const METADATA_BASE_URI = 'ipfs://QmXrA717vG4k3atQgUaNPacsMDK6o5jGvTiJd2wndfZ1Yd/'
+export const METADATA_BASE_URI = 'ipfs://QmWqsFtomNojeFPUsU1gb56FAA2WUhwZusNgv7gh7EsZnJ/'
