@@ -17,7 +17,9 @@ import {
   tierFrens
 } from './tiers';
 
-const OS_PROXY_ADDR = process.env.OS_PROXY_ADDR_RINKEBY;
+// OS_PROXY_ADDR is taken from the env variable set in the package script...
+const OS_PROXY_ADDR = process.env.OS_PROXY_ADDR;
+
 const MERKLE_ROOT = process.env.MERKLE_ROOT;
 
 async function main() {

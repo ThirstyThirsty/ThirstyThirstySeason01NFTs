@@ -9,8 +9,8 @@
     "test": "hardhat test",
     "goldlist": "hardhat run scripts/merkle-root.ts",
     "deploy:localhost": "hardhat run scripts/deploy.ts --network localhost",
-    "deploy:rinkeby": "hardhat run scripts/deploy.ts --network rinkeby",
-    "deploy:mainnet": "hardhat run scripts/deploy.ts --network mainnet",
+    "deploy:rinkeby": "OS_PROXY_ADDR=0xf57b2c51ded3a29e6891aba85459d600256cf317 hardhat run scripts/deploy.ts --network rinkeby",
+    "deploy:mainnet": "OS_PROXY_ADDR=0xa5409ec958c83c3f309868babaca7c86dcb077c1 hardhat run scripts/deploy.ts --network mainnet",
     "verify:rinkeby": "hardhat verify --network rinkeby --constructor-args ./scripts/arguments-rinkeby.ts",
     "verify:mainnet": "hardhat verify --network mainnet --constructor-args ./scripts/arguments-mainnet.ts"
   },
