@@ -13,7 +13,7 @@ import {
   TIER_TABLE_GOLD_ID,
   TIER_FRENS_ID
 } from '../utils/constants'
-import { ThirstyThirstySeason01 } from '../typechain-types/contracts/ThirstyThirstySeason01.sol/ThirstyThirstySeason01'
+import { ThirstyThirstySeason01 } from '../typechain-types/'
 
 const OS_PROXY_ADDR = process.env.OS_PROXY_ADDR_RINKEBY ? process.env.OS_PROXY_ADDR_RINKEBY : '0x0';
 
