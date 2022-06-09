@@ -166,13 +166,19 @@ Secondary sales are handled by platforms directly.
 
 The smart contract implements [Rarible](https://rarible.com)'s royalties specifications to set a **20%** royalty split for the `owner`, as well as the [ERC2981 NFT Royalties Standard](https://eips.ethereum.org/EIPS/eip-2981). The latter informs [Mintable](https://mintable.app) that **20%** of the resale is sent to the owner and hopefully, as the spec becomes enforced by more and more platforms, it makes the royalties management for this contract future-proof.
 
-## Contract addresses
+## Contract + metadata addresses
 
 Here are the up-to-date contract addresses on various Ethereum networks.
 
 ```
 - Rinkeby        0x68c0D7CdC7c5Bc028C66Ff933524F30C736fC8EC
-- Mainnet        TBD
+- Mainnet        0x9a1a77CF312DD43D6Da93c5Ed5D2b4ef592e8962
+```
+
+And the metadata on IPFS
+
+```
+ipfs://QmZoPh82MPS9kog7BP8Dn6DAvEATHyzpXTJhbDJT7V1nYK/
 ```
 
 ## Contributing
