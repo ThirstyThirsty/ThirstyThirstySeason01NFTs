@@ -17,8 +17,9 @@ import {
   tierFrens
 } from './tiers';
 
-// OS_PROXY_ADDR is taken from the env variable set in the package script...
-const OS_PROXY_ADDR = process.env.OS_PROXY_ADDR;
+// OS_PROXY_ADDR is taken from the env variable set in the package script
+// Set to mainnnet address by default.
+const OS_PROXY_ADDR = process.env.OS_PROXY_ADDR || '0xa5409ec958c83c3f309868babaca7c86dcb077c1';
 
 const MERKLE_ROOT = process.env.MERKLE_ROOT;
 
